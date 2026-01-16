@@ -2,9 +2,14 @@ package com.example.mangavault.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class JikanResponse(
+// Menggunakan Generic <T> agar bisa dipakai untuk List maupun Single Object
+data class JikanResponse<T>(
     @SerializedName("data")
-    val data: List<JikanMangaDto>
+    val data: T,
+
+    // Pagination biasanya hanya ada di search, jadi kita buat nullable
+    @SerializedName("pagination")
+    val pagination: PaginationDto? = null
 )
 
 // Class baru untuk respons single detail (jika nanti dibutuhkan fetch by ID)
@@ -40,4 +45,11 @@ data class ImageJpg(
 
     @SerializedName("large_image_url")
     val largeImageUrl: String?
+)
+
+data class PaginationDto(
+    @SerializedName("last_visible_page")
+    val lastVisiblePage: Int,
+    @SerializedName("has_next_page")
+    val hasNextPage: Boolean
 )
