@@ -3,28 +3,33 @@ package com.example.mangavault.ui.view.components
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier // FIX: Import ditambahkan
+import androidx.compose.ui.Modifier
 
-@OptIn(ExperimentalMaterial3Api::class) // FIX: Anotasi ditambahkan
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatusDropdown(
     currentStatus: String,
     onStatusSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val statuses = listOf("Reading", "Completed", "On Hold", "Dropped", "Plan to Read")
+    // Opsi status sesuai dengan format yang diinginkan
+    val options = listOf("Reading", "Completed", "Plan to Read")
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
+        onExpandedChange = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
     ) {
         OutlinedTextField(
-            value = currentStatus,
-            onValueChange = {},
             readOnly = true,
+            value = currentStatus,
+            onValueChange = { },
             label = { Text("Status") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier // Modifier sudah dikenali
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth()
         )
@@ -32,11 +37,11 @@ fun StatusDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            statuses.forEach { status ->
+            options.forEach { selectionOption ->
                 DropdownMenuItem(
-                    text = { Text(status) },
+                    text = { Text(selectionOption) },
                     onClick = {
-                        onStatusSelected(status)
+                        onStatusSelected(selectionOption)
                         expanded = false
                     }
                 )

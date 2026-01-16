@@ -4,13 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.mangavault.ui.viewmodel.settings.SettingsViewModel
 
@@ -22,6 +18,7 @@ fun SettingsScreen(
     onNavigateToAbout: () -> Unit
 ) {
     val isDarkMode by viewModel.isDarkMode.collectAsState()
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -55,7 +52,7 @@ fun SettingsScreen(
             Text("Account", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { viewModel.logout(onLogoutSuccess) },
+                onClick = { showLogoutDialog = true }, // Munculkan dialog, bukan logout langsung
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -73,6 +70,31 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("About App")
             }
+        }
+
+        // KONFIRMASI LOGOUT - REQ-AUTH-06
+        if (showLogoutDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogoutDialog = false },
+                title = { Text("Confirm Logout") },
+                text = { Text("Are you sure you want to log out?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showLogoutDialog = false
+                            viewModel.logout(onLogoutSuccess)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Logout")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showLogoutDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }

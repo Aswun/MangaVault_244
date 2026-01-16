@@ -6,8 +6,17 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MangaDao {
+    // Default / Sort by Title
     @Query("SELECT * FROM manga WHERE userId = :userId ORDER BY title ASC")
-    fun getMangaByUser(userId: Int): Flow<List<MangaEntity>>
+    fun getMangaByTitle(userId: Int): Flow<List<MangaEntity>>
+
+    // Sort by Status
+    @Query("SELECT * FROM manga WHERE userId = :userId ORDER BY status ASC")
+    fun getMangaByStatus(userId: Int): Flow<List<MangaEntity>>
+
+    // Sort by Rating (Highest first)
+    @Query("SELECT * FROM manga WHERE userId = :userId ORDER BY rating DESC")
+    fun getMangaByRating(userId: Int): Flow<List<MangaEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertManga(manga: MangaEntity)

@@ -8,6 +8,7 @@ import com.example.mangavault.data.repository.SearchRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException // Pastikan import ini ada
 import java.io.IOException
 
 class SearchViewModel(
@@ -15,11 +16,9 @@ class SearchViewModel(
     private val libraryRepository: LibraryRepository
 ) : ViewModel() {
 
-    // Menggunakan SearchState alih-alih List biasa
     private val _state = MutableStateFlow<SearchState>(SearchState.Idle)
     val state: StateFlow<SearchState> = _state
 
-    // Kita tetap simpan results terakhir untuk akses detail screen jika perlu
     val results: StateFlow<List<JikanMangaDto>>
         get() = if (_state.value is SearchState.Success) {
             MutableStateFlow((_state.value as SearchState.Success).mangaList)
@@ -38,6 +37,13 @@ class SearchViewModel(
                     _state.value = SearchState.Error("Manga not found.")
                 } else {
                     _state.value = SearchState.Success(result)
+                }
+            } catch (e: HttpException) {
+                // PENANGANAN SPESIFIK RATE LIMIT (HTTP 429) - REQ-OTH-19
+                if (e.code() == 429) {
+                    _state.value = SearchState.Error("Too many requests. Please wait a moment before searching again.")
+                } else {
+                    _state.value = SearchState.Error("Server error: ${e.message()}")
                 }
             } catch (e: IOException) {
                 _state.value = SearchState.Error("Network error. Check your connection.")

@@ -1,5 +1,6 @@
 package com.example.mangavault.ui.view.detail
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -24,9 +26,8 @@ fun MangaDetailApiScreen(
     onBack: () -> Unit,
     onSaveSuccess: () -> Unit
 ) {
-    // Mencari manga berdasarkan ID dari list hasil search
-    // Pastikan menggunakan it.malId (camelCase sesuai DTO)
     val manga = viewModel.results.collectAsState().value.find { it.malId == mangaId }
+    val context = LocalContext.current // Untuk menampilkan Toast
 
     Scaffold(
         topBar = {
@@ -43,6 +44,8 @@ fun MangaDetailApiScreen(
             FloatingActionButton(onClick = {
                 manga?.let {
                     viewModel.saveToLibrary(it)
+                    // NOTIFIKASI SUKSES - REQ-SEA-09
+                    Toast.makeText(context, "${it.title} added to Library", Toast.LENGTH_SHORT).show()
                     onSaveSuccess()
                 }
             }) {
@@ -61,7 +64,6 @@ fun MangaDetailApiScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Gambar Cover (Gunakan largeImageUrl jika ada, fallback ke imageUrl)
                 AsyncImage(
                     model = manga.images?.jpg?.largeImageUrl ?: manga.images?.jpg?.imageUrl,
                     contentDescription = manga.title,
