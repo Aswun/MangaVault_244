@@ -7,6 +7,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.mangavault.ui.view.components.ConfirmDeleteDialog
+import com.example.mangavault.ui.view.components.EditMangaDialog
+import com.example.mangavault.ui.view.components.MangaItem
 import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 
 @Composable

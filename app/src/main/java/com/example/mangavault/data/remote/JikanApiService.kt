@@ -1,5 +1,6 @@
 package com.example.mangavault.data.remote
 
+import com.example.mangavault.data.remote.dto.JikanResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 

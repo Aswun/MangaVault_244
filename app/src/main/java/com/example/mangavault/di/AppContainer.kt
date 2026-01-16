@@ -1,7 +1,7 @@
 package com.example.mangavault.di
 
 import android.content.Context
-import com.example.mangavault.data.local.MangaVaultDatabase
+import com.example.mangavault.data.local.database.MangaVaultDatabase
 import com.example.mangavault.data.repository.AuthRepository
 import com.example.mangavault.data.repository.LibraryRepository
 import com.example.mangavault.datastore.SessionPreferences

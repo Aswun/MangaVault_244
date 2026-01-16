@@ -12,8 +12,7 @@ class LibraryRepository(
 ) {
 
     suspend fun getUserManga(): Flow<List<MangaEntity>> {
-        val userId = sessionPreferences.userId.first()
-            ?: error("User not logged in")
+        val userId = sessionPreferences.userId.first() ?: -1 // Return default/handle error
         return mangaDao.getMangaByUser(userId)
     }
 
@@ -25,8 +24,7 @@ class LibraryRepository(
         volumeOwned: Int,
         rating: Int?
     ) {
-        val userId = sessionPreferences.userId.first()
-            ?: error("User not logged in")
+        val userId = sessionPreferences.userId.first() ?: return // Guard clause
 
         mangaDao.upsertManga(
             MangaEntity(
@@ -42,9 +40,7 @@ class LibraryRepository(
     }
 
     suspend fun deleteManga(mangaId: Int) {
-        val userId = sessionPreferences.userId.first()
-            ?: error("User not logged in")
-
+        val userId = sessionPreferences.userId.first() ?: return
         mangaDao.deleteManga(mangaId, userId)
     }
 
@@ -54,9 +50,7 @@ class LibraryRepository(
         rating: Int?,
         volumeOwned: Int
     ) {
-        val userId = sessionPreferences.userId.first()
-            ?: error("User not logged in")
-
+        val userId = sessionPreferences.userId.first() ?: return
         mangaDao.updateManga(
             mangaId = mangaId,
             userId = userId,
@@ -64,5 +58,10 @@ class LibraryRepository(
             rating = rating,
             volumeOwned = volumeOwned
         )
+    }
+
+    // --- TAMBAHKAN INI ---
+    suspend fun logout() {
+        sessionPreferences.clearSession()
     }
 }

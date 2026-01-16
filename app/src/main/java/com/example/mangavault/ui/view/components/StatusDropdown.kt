@@ -1,4 +1,4 @@
-package com.example.mangavault.ui.view.library
+package com.example.mangavault.ui.view.components
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*

@@ -3,7 +3,6 @@ package com.example.mangavault
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -14,40 +13,41 @@ import com.example.mangavault.ui.theme.MangaVaultTheme
 import com.example.mangavault.ui.viewmodel.MainViewModel
 import com.example.mangavault.ui.viewmodel.auth.LoginViewModel
 import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
+import com.example.mangavault.ui.viewmodel.search.SearchViewModel
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val appContainer =
-            (application as MangaVaultApplication).container
-
+        val appContainer = (application as MangaVaultApplication).container
         val factory = ViewModelFactory(appContainer)
 
         setContent {
-            MangaVaultTheme {
+            val mainViewModel: MainViewModel = viewModel(factory = factory)
 
+            // 1. Ambil state theme
+            val isDarkTheme by mainViewModel.isDarkMode.collectAsState()
+            val startDestination by mainViewModel.startDestination.collectAsState()
+
+            // 2. Pasang ke MangaVaultTheme
+            MangaVaultTheme(
+                darkTheme = isDarkTheme // Override setting sistem dengan setting user
+            ) {
                 val navController = rememberNavController()
 
-                val mainViewModel: MainViewModel =
-                    viewModel(factory = factory)
-
-                val loginViewModel: LoginViewModel =
-                    viewModel(factory = factory)
-
-                val libraryViewModel: LibraryViewModel =
-                    viewModel(factory = factory)
-
-                val startDestination by
-                mainViewModel.startDestination.collectAsState()
+                val loginViewModel: LoginViewModel = viewModel(factory = factory)
+                val libraryViewModel: LibraryViewModel = viewModel(factory = factory)
+                val searchViewModel: SearchViewModel = viewModel(factory = factory)
 
                 if (startDestination != null) {
                     AppNavHost(
                         navController = navController,
                         startDestination = startDestination!!,
+                        mainViewModel = mainViewModel, // 3. Pass MainViewModel ke NavHost
                         loginViewModel = loginViewModel,
-                        libraryViewModel = libraryViewModel
+                        libraryViewModel = libraryViewModel,
+                        searchViewModel = searchViewModel
                     )
                 }
             }
