@@ -9,47 +9,37 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class LibraryViewModel(
-    private val libraryRepository: LibraryRepository
-) : ViewModel() {
-
+class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() {
     private val _uiState = MutableStateFlow<LibraryState>(LibraryState.Loading)
     val uiState: StateFlow<LibraryState> = _uiState.asStateFlow()
 
     init {
-        loadUserManga()
+        loadLibrary()
     }
 
-    fun loadUserManga() {
+    private fun loadLibrary() {
         viewModelScope.launch {
-            _uiState.value = LibraryState.Loading
-            try {
-                libraryRepository.getUserManga().collect { mangaList ->
-                    if (mangaList.isEmpty()) {
-                        _uiState.value = LibraryState.Empty
-                    } else {
-                        _uiState.value = LibraryState.Success(mangaList)
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.value = LibraryState.Error("Gagal memuat library: ${e.message}")
+            repository.getUserManga().collect { list ->
+                _uiState.value = LibraryState.Success(list)
             }
-        }
-    }
-
-    fun deleteManga(mangaId: Int) {
-        viewModelScope.launch {
-            libraryRepository.deleteManga(mangaId)
-            loadUserManga()
         }
     }
 
     fun updateManga(manga: MangaEntity) {
         viewModelScope.launch {
-            libraryRepository.updateManga(manga)
-            loadUserManga()
+            repository.updateManga(
+                manga.mangaId,
+                manga.userId,
+                manga.status,
+                manga.rating,
+                manga.volumeOwned
+            )
         }
     }
 
-    // FUNGSI LOGOUT TELAH DIHAPUS (Pindah ke SettingsViewModel)
+    fun deleteManga(mangaId: Int) {
+        viewModelScope.launch {
+            repository.deleteManga(mangaId)
+        }
+    }
 }

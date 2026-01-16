@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.mangavault.ui.view.components.EditMangaDialog
+import com.example.mangavault.ui.viewmodel.library.LibraryState
 import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,9 +26,10 @@ fun MangaDetailLocalScreen(
     viewModel: LibraryViewModel,
     onBack: () -> Unit
 ) {
-    val mangaList by viewModel.mangaList.collectAsState()
-    val manga = mangaList.find { it.mangaId == mangaId }
+    val uiState by viewModel.uiState.collectAsState()
 
+    // Ambil data manga dari state Success
+    val manga = (uiState as? LibraryState.Success)?.mangaList?.find { it.mangaId == mangaId }
     var showEditDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -42,9 +44,6 @@ fun MangaDetailLocalScreen(
                 actions = {
                     IconButton(onClick = {
                         manga?.let {
-                            viewModel.requestDelete(it) // Panggil dialog delete di LibraryScreen atau handle disini
-                            // Karena viewModel.requestDelete mentrigger state di LibraryScreen,
-                            // idealnya kita handle delete langsung:
                             viewModel.deleteManga(it.mangaId)
                             onBack()
                         }
@@ -65,10 +64,7 @@ fun MangaDetailLocalScreen(
         }
     ) { padding ->
         if (manga == null) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Manga not found in library")
             }
         } else {
@@ -81,40 +77,20 @@ fun MangaDetailLocalScreen(
                 AsyncImage(
                     model = manga.imageUrl,
                     contentDescription = manga.title,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(350.dp),
+                    modifier = Modifier.fillMaxWidth().height(350.dp),
                     contentScale = ContentScale.Crop
                 )
-
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = manga.title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-
+                    Text(text = manga.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(24.dp))
-
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "Reading Progress",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Text("Reading Progress", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.height(12.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 DetailItem(label = "Status", value = manga.status)
                                 DetailItem(label = "Volumes", value = "${manga.volumeOwned}")
                                 DetailItem(label = "My Rating", value = if (manga.rating != null && manga.rating > 0) "${manga.rating}/10" else "-")
@@ -130,10 +106,7 @@ fun MangaDetailLocalScreen(
                     onDismiss = { showEditDialog = false },
                     onSave = { status, rating, volumeOwned ->
                         viewModel.updateManga(
-                            mangaId = manga.mangaId,
-                            status = status,
-                            rating = rating,
-                            volumeOwned = volumeOwned
+                            manga.copy(status = status, rating = rating, volumeOwned = volumeOwned)
                         )
                         showEditDialog = false
                     }
@@ -146,7 +119,7 @@ fun MangaDetailLocalScreen(
 @Composable
 fun DetailItem(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = label, style = MaterialTheme.typography.bodySmall)
-        Text(text = value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
     }
 }

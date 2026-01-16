@@ -13,12 +13,12 @@ import com.example.mangavault.ui.view.detail.MangaDetailApiScreen
 import com.example.mangavault.ui.view.detail.MangaDetailLocalScreen
 import com.example.mangavault.ui.view.library.LibraryScreen
 import com.example.mangavault.ui.view.search.SearchScreen
-import com.example.mangavault.ui.view.settings.SettingsScreen // Pastikan Import ini Benar
+import com.example.mangavault.ui.view.settings.SettingsScreen
 import com.example.mangavault.ui.viewmodel.MainViewModel
 import com.example.mangavault.ui.viewmodel.auth.LoginViewModel
 import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 import com.example.mangavault.ui.viewmodel.search.SearchViewModel
-import com.example.mangavault.ui.viewmodel.settings.SettingsViewModel // Import ini
+import com.example.mangavault.ui.viewmodel.settings.SettingsViewModel
 
 @Composable
 fun AppNavHost(
@@ -28,7 +28,7 @@ fun AppNavHost(
     loginViewModel: LoginViewModel,
     libraryViewModel: LibraryViewModel,
     searchViewModel: SearchViewModel,
-    settingsViewModel: SettingsViewModel, // Tambahkan Parameter Ini
+    settingsViewModel: SettingsViewModel,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -36,8 +36,6 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier
     ) {
-        // ... (Route Login, Library, Search, About TETAP SAMA) ...
-
         composable(NavRoute.Login.route) {
             LoginScreen(
                 viewModel = loginViewModel,
@@ -50,12 +48,11 @@ fun AppNavHost(
         }
 
         composable(NavRoute.Library.route) {
-            // Hapus onLogout dari sini karena sudah pindah ke Settings
             LibraryScreen(
                 viewModel = libraryViewModel,
-                onLogout = { /* Tidak dipakai lagi disini */ }
-                // Jika LibraryScreen masih minta onLogout, hapus parameter itu di file LibraryScreen.kt
-                // Atau biarkan kosong sementara
+                onNavigateToDetail = { mangaId ->
+                    navController.navigate(NavRoute.DetailLocal.createRoute(mangaId))
+                }
             )
         }
 
@@ -70,7 +67,6 @@ fun AppNavHost(
             AboutScreen()
         }
 
-        // --- UPDATE ROUTE SETTINGS ---
         composable(NavRoute.Setting.route) {
             SettingsScreen(
                 viewModel = settingsViewModel,
@@ -85,10 +81,8 @@ fun AppNavHost(
             )
         }
 
-        // ... (Route Detail API & Local TETAP SAMA) ...
-
         composable(
-            route = "detail_api/{mangaId}",
+            route = NavRoute.DetailApi.route,
             arguments = listOf(navArgument("mangaId") { type = NavType.IntType })
         ) { backStackEntry ->
             val mangaId = backStackEntry.arguments?.getInt("mangaId") ?: 0
@@ -96,14 +90,12 @@ fun AppNavHost(
                 mangaId = mangaId,
                 viewModel = searchViewModel,
                 onBack = { navController.popBackStack() },
-                onSaveSuccess = {
-                    navController.popBackStack()
-                }
+                onSaveSuccess = { navController.popBackStack() }
             )
         }
 
         composable(
-            route = "detail_local/{mangaId}",
+            route = NavRoute.DetailLocal.route,
             arguments = listOf(navArgument("mangaId") { type = NavType.IntType })
         ) { backStackEntry ->
             val mangaId = backStackEntry.arguments?.getInt("mangaId") ?: 0

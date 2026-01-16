@@ -11,18 +11,15 @@ class LibraryRepository(
     private val mangaDao: MangaDao,
     private val sessionPreferences: SessionPreferences
 ) {
-
-    // Ambil data manga KHUSUS untuk user yang sedang login
     suspend fun getUserManga(): Flow<List<MangaEntity>> {
         val userId = sessionPreferences.userId.first()
         return if (userId != null) {
             mangaDao.getMangaByUser(userId)
         } else {
-            flowOf(emptyList()) // Return kosong jika tidak ada user
+            flowOf(emptyList())
         }
     }
 
-    // Simpan manga dengan menyertakan userId
     suspend fun saveManga(
         mangaId: Int,
         title: String,
@@ -35,7 +32,7 @@ class LibraryRepository(
         if (userId != null) {
             val manga = MangaEntity(
                 mangaId = mangaId,
-                userId = userId, // FIX: UserId diambil dari session
+                userId = userId,
                 title = title,
                 imageUrl = imageUrl,
                 status = status,
@@ -49,21 +46,18 @@ class LibraryRepository(
     suspend fun deleteManga(mangaId: Int) {
         val userId = sessionPreferences.userId.first()
         if (userId != null) {
-            // Kita perlu hapus berdasarkan composite key (mangaId + userId)
-            // Asumsi di DAO ada method deleteMangaByIds(mangaId, userId)
-            // Jika di DAO anda hanya ada delete(entity), maka:
-            val manga = mangaDao.getMangaByIdAndUser(mangaId, userId)
-            if (manga != null) {
-                mangaDao.deleteManga(manga)
-            }
+            // Memanggil query delete langsung dari DAO
+            mangaDao.deleteManga(mangaId, userId)
         }
     }
 
-    suspend fun updateManga(manga: MangaEntity) {
-        // Pastikan manga yang diupdate milik user yang login
-        val userId = sessionPreferences.userId.first()
-        if (userId != null && manga.userId == userId) {
-            mangaDao.upsertManga(manga)
-        }
+    suspend fun updateManga(
+        mangaId: Int,
+        userId: Int,
+        status: String,
+        rating: Int?,
+        volumeOwned: Int
+    ) {
+        mangaDao.updateManga(mangaId, userId, status, rating, volumeOwned)
     }
 }

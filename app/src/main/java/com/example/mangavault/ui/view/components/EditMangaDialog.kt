@@ -24,18 +24,15 @@ fun EditMangaDialog(
         title = { Text("Edit Manga") },
         text = {
             Column {
-
                 StatusDropdown(
-                    selected = status,
-                    onSelect = { status = it }
+                    currentStatus = status,
+                    onStatusSelected = { status = it }
                 )
-
                 OutlinedTextField(
                     value = volume,
                     onValueChange = { volume = it },
                     label = { Text("Volume Owned") }
                 )
-
                 OutlinedTextField(
                     value = rating,
                     onValueChange = { rating = it },
