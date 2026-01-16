@@ -68,8 +68,10 @@ fun AppNavHost(
         }
 
         composable(NavRoute.Setting.route) {
+            // PERBAIKAN: Menambahkan parameter navController yang wajib
             SettingsScreen(
                 viewModel = settingsViewModel,
+                navController = navController,
                 onNavigateToAbout = {
                     navController.navigate(NavRoute.About.route)
                 },

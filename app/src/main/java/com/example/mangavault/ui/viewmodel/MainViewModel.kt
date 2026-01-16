@@ -32,22 +32,23 @@ class MainViewModel(
         )
 
     init {
-        checkSession()
+        observeSession()
     }
 
-    private fun checkSession() {
+    private fun observeSession() {
+        // Pemantauan sesi secara real-time (Memperbaiki Bug Logout kembali ke Library)
         viewModelScope.launch {
-            val isLoggedIn = sessionPreferences.isLoggedIn
-                .stateIn(viewModelScope)
-                .value
-
-            // Gunakan NavRoute yang sesuai
-            _startDestination.value = if (isLoggedIn) {
-                NavRoute.Library.route
-            } else {
-                NavRoute.Login.route
+            sessionPreferences.isLoggedIn.collect { isLoggedIn ->
+                _startDestination.value = if (isLoggedIn) {
+                    NavRoute.Library.route
+                } else {
+                    NavRoute.Login.route
+                }
             }
+        }
 
+        // Logika Splash Screen terpisah
+        viewModelScope.launch {
             delay(1000)
             _isLoading.value = false
         }

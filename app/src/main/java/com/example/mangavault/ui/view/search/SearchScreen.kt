@@ -1,5 +1,6 @@
 package com.example.mangavault.ui.view.search
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,7 +31,7 @@ fun SearchScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var query by remember { mutableStateOf("") }
-    val context = LocalContext.current // Diperlukan untuk cek internet
+    val context = LocalContext.current // Diperlukan untuk cek internet dan Toast
 
     // State untuk Dialog Penambahan Manga
     var showAddDialog by remember { mutableStateOf(false) }
@@ -129,6 +130,8 @@ fun SearchScreen(
                     rating = rating,
                     volumeOwned = volume
                 )
+                // REVISI: Tambahkan feedback Toast (Memperbaiki Bug No. 3)
+                Toast.makeText(context, "${manga.title} added to Library", Toast.LENGTH_SHORT).show()
                 showAddDialog = false
             }
         )

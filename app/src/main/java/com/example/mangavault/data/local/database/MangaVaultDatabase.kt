@@ -13,7 +13,6 @@ import com.example.mangavault.data.local.entity.UserEntity
 import com.example.mangavault.util.PasswordHasher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Database(
     entities = [UserEntity::class, MangaEntity::class],
@@ -28,31 +27,30 @@ abstract class MangaVaultDatabase : RoomDatabase() {
 
     // Callback untuk mengisi data awal (Seeding)
     private class MangaDatabaseCallback(
-        private val scope: CoroutineScope
+        private val scope: CoroutineScope // Scope tidak lagi digunakan untuk insert, tapi dibiarkan agar tidak merubah signature constructor
     ) : Callback() {
 
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
-            // Instance database belum tentu null, tapi kita gunakan safe call
-            // Menggunakan Dispatchers.IO untuk operasi database di background
-            Instance?.let { database ->
-                scope.launch(Dispatchers.IO) {
-                    populateDatabase(database.userDao())
-                }
-            }
-        }
 
-        suspend fun populateDatabase(userDao: UserDao) {
-            // Hapus data lama jika perlu (opsional untuk onCreate)
-            // userDao.deleteAll()
+            // REVISI PENTING: Menggunakan execSQL untuk insert Sync.
+            // Ini mencegah Race Condition di mana login dilakukan sebelum data selesai dibuat.
 
-            // Tambahkan User Manual: aswin / aswin123
-            // PENTING: Password harus di-hash menggunakan PasswordHasher sebelum disimpan
-            val user = UserEntity(
-                username = "aswin",
-                passwordHash = PasswordHasher.hash("aswin123")
+            // 1. Hash Password
+            val passAswin = PasswordHasher.hash("aswin123")
+            val passArdhi = PasswordHasher.hash("ardhi123") // User ke-2
+
+            // 2. Insert User 1: aswin
+            db.execSQL(
+                "INSERT INTO users (username, passwordHash) VALUES (?, ?)",
+                arrayOf("aswin", passAswin)
             )
-            userDao.insertUser(user)
+
+            // 3. Insert User 2: ardhi
+            db.execSQL(
+                "INSERT INTO users (username, passwordHash) VALUES (?, ?)",
+                arrayOf("ardhi", passArdhi)
+            )
         }
     }
 
@@ -62,7 +60,6 @@ abstract class MangaVaultDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): MangaVaultDatabase {
             return Instance ?: synchronized(this) {
-                // Membuat Scope sementara untuk callback database
                 val scope = CoroutineScope(Dispatchers.IO)
 
                 Room.databaseBuilder(
@@ -71,7 +68,7 @@ abstract class MangaVaultDatabase : RoomDatabase() {
                     "mangavault_database"
                 )
                     .fallbackToDestructiveMigration()
-                    .addCallback(MangaDatabaseCallback(scope)) // Tambahkan Callback di sini
+                    .addCallback(MangaDatabaseCallback(scope))
                     .build()
                     .also { Instance = it }
             }

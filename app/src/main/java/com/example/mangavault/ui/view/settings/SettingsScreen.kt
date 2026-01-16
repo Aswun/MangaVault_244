@@ -1,100 +1,165 @@
 package com.example.mangavault.ui.view.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.mangavault.ui.navigation.NavRoute
 import com.example.mangavault.ui.viewmodel.settings.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    onLogoutSuccess: () -> Unit,
-    onNavigateToAbout: () -> Unit
+    navController: NavController,
+    // Callback tambahan jika Anda masih menggunakan versi lama AppNavHost
+    onNavigateToAbout: () -> Unit = {},
+    onLogoutSuccess: () -> Unit = {}
 ) {
     val isDarkMode by viewModel.isDarkMode.collectAsState()
-    var showLogoutDialog by remember { mutableStateOf(false) }
+    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Settings") })
+            TopAppBar(
+                title = { Text("Settings") }
+            )
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
-                .fillMaxSize()
         ) {
-            // Appearance
-            Text("Appearance", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(8.dp))
+            // Section: Appearance
+            SettingsSectionHeader(title = "Appearance")
+
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Dark Mode")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.DarkMode, contentDescription = null)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text("Dark Mode")
+                }
                 Switch(
                     checked = isDarkMode,
-                    onCheckedChange = { viewModel.updateTheme(it) }
+                    onCheckedChange = { viewModel.toggleDarkMode(it) }
                 )
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+            HorizontalDivider()
 
-            // Account
-            Text("Account", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = { showLogoutDialog = true }, // Munculkan dialog, bukan logout langsung
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Logout")
+            // Section: Account
+            SettingsSectionHeader(title = "Account")
+
+            if (isLoggedIn) {
+                // Tampilkan Profile & Logout jika user Login
+                SettingsItem(
+                    icon = Icons.Default.Person,
+                    title = "Profile",
+                    onClick = { /* Navigate to Profile if implemented */ }
+                )
+
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Filled.ExitToApp,
+                    title = "Logout",
+                    textColor = MaterialTheme.colorScheme.error,
+                    onClick = { viewModel.logout() }
+                )
+            } else {
+                // Tampilkan Login jika user Logout
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Filled.Login,
+                    title = "Login",
+                    textColor = MaterialTheme.colorScheme.primary,
+                    onClick = {
+                        // Arahkan ke halaman Login
+                        navController.navigate(NavRoute.Login.route) {
+                            // Perbaikan: Menggunakan NavRoute.Setting (sesuai file Anda)
+                            // Hapus 'inclusive = false' karena itu default, untuk menghindari error akses private
+                            popUpTo(NavRoute.Setting.route)
+                        }
+                    }
+                )
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+            HorizontalDivider()
 
-            // About
-            OutlinedButton(
-                onClick = onNavigateToAbout,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.Info, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("About App")
-            }
-        }
+            // Section: About
+            SettingsSectionHeader(title = "About")
 
-        // KONFIRMASI LOGOUT - REQ-AUTH-06
-        if (showLogoutDialog) {
-            AlertDialog(
-                onDismissRequest = { showLogoutDialog = false },
-                title = { Text("Confirm Logout") },
-                text = { Text("Are you sure you want to log out?") },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showLogoutDialog = false
-                            viewModel.logout(onLogoutSuccess)
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                    ) {
-                        Text("Logout")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showLogoutDialog = false }) {
-                        Text("Cancel")
-                    }
-                }
+            SettingsItem(
+                icon = Icons.Default.Info,
+                title = "About MangaVault",
+                onClick = { navController.navigate(NavRoute.About.route) }
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Text(
+                text = "Version 1.0.0",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
+    }
+}
+
+@Composable
+fun SettingsSectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+    )
+}
+
+@Composable
+fun SettingsItem(
+    icon: ImageVector,
+    title: String,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = textColor
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = title,
+            color = textColor,
+            style = MaterialTheme.typography.bodyLarge
+        )
     }
 }
