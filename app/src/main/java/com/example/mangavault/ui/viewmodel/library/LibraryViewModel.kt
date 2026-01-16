@@ -6,115 +6,50 @@ import com.example.mangavault.data.local.entity.MangaEntity
 import com.example.mangavault.data.repository.LibraryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LibraryViewModel(
-    private val repository: LibraryRepository
+    private val libraryRepository: LibraryRepository
 ) : ViewModel() {
 
-    // --- State untuk List Manga ---
-    // Mengambil data flow dari repository dan mengubahnya menjadi StateFlow atau dikonsumsi di UI
-    // Karena repository.getUserManga() return Flow, kita bisa mengeksposnya langsung atau membungkusnya.
-    // Di sini saya perbaiki agar sesuai dengan penggunaan di LibraryScreen (collectAsState)
-
-    // Kita butuh variabel untuk menampung list manga agar bisa diobservasi oleh UI
-    private val _mangaList = MutableStateFlow<List<MangaEntity>>(emptyList())
-    val mangaList: StateFlow<List<MangaEntity>> = _mangaList
+    private val _uiState = MutableStateFlow<LibraryState>(LibraryState.Loading)
+    val uiState: StateFlow<LibraryState> = _uiState.asStateFlow()
 
     init {
-        loadManga()
+        loadUserManga()
     }
 
-    private fun loadManga() {
+    fun loadUserManga() {
         viewModelScope.launch {
+            _uiState.value = LibraryState.Loading
             try {
-                repository.getUserManga().collect { list ->
-                    _mangaList.value = list
+                libraryRepository.getUserManga().collect { mangaList ->
+                    if (mangaList.isEmpty()) {
+                        _uiState.value = LibraryState.Empty
+                    } else {
+                        _uiState.value = LibraryState.Success(mangaList)
+                    }
                 }
             } catch (e: Exception) {
-                // Handle error jika user belum login (sesuai logic repository)
+                _uiState.value = LibraryState.Error("Gagal memuat library: ${e.message}")
             }
-        }
-    }
-
-    fun addOrUpdateManga(
-        mangaId: Int,
-        title: String,
-        imageUrl: String?,
-        status: String,
-        volumeOwned: Int,
-        rating: Int?
-    ) {
-        viewModelScope.launch {
-            repository.saveManga(
-                mangaId,
-                title,
-                imageUrl,
-                status,
-                volumeOwned,
-                rating
-            )
         }
     }
 
     fun deleteManga(mangaId: Int) {
         viewModelScope.launch {
-            repository.deleteManga(mangaId)
+            libraryRepository.deleteManga(mangaId)
+            loadUserManga()
         }
     }
 
-    private val _selectedManga = MutableStateFlow<MangaEntity?>(null)
-    val selectedManga: StateFlow<MangaEntity?> = _selectedManga
-
-    fun selectManga(manga: MangaEntity) {
-        _selectedManga.value = manga
-    }
-
-    fun clearSelection() {
-        _selectedManga.value = null
-    }
-
-    fun updateManga(
-        mangaId: Int,
-        status: String,
-        rating: Int?,
-        volumeOwned: Int
-    ) {
+    fun updateManga(manga: MangaEntity) {
         viewModelScope.launch {
-            repository.updateManga(
-                mangaId = mangaId,
-                status = status,
-                rating = rating,
-                volumeOwned = volumeOwned
-            )
-            clearSelection()
+            libraryRepository.updateManga(manga)
+            loadUserManga()
         }
     }
 
-    private val _mangaToDelete = MutableStateFlow<MangaEntity?>(null)
-    val mangaToDelete: StateFlow<MangaEntity?> = _mangaToDelete
-
-    fun requestDelete(manga: MangaEntity) {
-        _mangaToDelete.value = manga
-    }
-
-    fun cancelDelete() {
-        _mangaToDelete.value = null
-    }
-
-    fun confirmDelete() {
-        val manga = _mangaToDelete.value ?: return
-
-        viewModelScope.launch {
-            repository.deleteManga(manga.mangaId)
-            _mangaToDelete.value = null
-        }
-    }
-
-    fun logout() {
-        viewModelScope.launch {
-            repository.logout()
-        }
-    }
+    // FUNGSI LOGOUT TELAH DIHAPUS (Pindah ke SettingsViewModel)
 }

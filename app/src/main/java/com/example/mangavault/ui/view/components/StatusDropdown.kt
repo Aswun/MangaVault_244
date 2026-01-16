@@ -1,45 +1,42 @@
 package com.example.mangavault.ui.view.components
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier // FIX: Import ditambahkan
 
+@OptIn(ExperimentalMaterial3Api::class) // FIX: Anotasi ditambahkan
 @Composable
 fun StatusDropdown(
-    selected: String,
-    onSelect: (String) -> Unit
+    currentStatus: String,
+    onStatusSelected: (String) -> Unit
 ) {
-    val options = listOf(
-        "Reading",
-        "Completed",
-        "Plan to Read"
-    )
-
     var expanded by remember { mutableStateOf(false) }
+    val statuses = listOf("Reading", "Completed", "On Hold", "Dropped", "Plan to Read")
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
     ) {
         OutlinedTextField(
-            value = selected,
+            value = currentStatus,
             onValueChange = {},
             readOnly = true,
             label = { Text("Status") },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-            },
-            modifier = Modifier.menuAnchor()
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier // Modifier sudah dikenali
+                .menuAnchor()
+                .fillMaxWidth()
         )
-
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            options.forEach {
+            statuses.forEach { status ->
                 DropdownMenuItem(
-                    text = { Text(it) },
+                    text = { Text(status) },
                     onClick = {
-                        onSelect(it)
+                        onStatusSelected(status)
                         expanded = false
                     }
                 )

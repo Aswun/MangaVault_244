@@ -1,8 +1,6 @@
 package com.example.mangavault.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -15,13 +13,12 @@ import com.example.mangavault.ui.view.detail.MangaDetailApiScreen
 import com.example.mangavault.ui.view.detail.MangaDetailLocalScreen
 import com.example.mangavault.ui.view.library.LibraryScreen
 import com.example.mangavault.ui.view.search.SearchScreen
-// Pastikan package ini sesuai dengan file SettingsScreen.kt kamu.
-// Jika di file SettingsScreen package-nya "ui.view.setting", ubah import di bawah ini.
-import com.example.mangavault.ui.view.settings.SettingScreen
+import com.example.mangavault.ui.view.settings.SettingsScreen // Pastikan Import ini Benar
 import com.example.mangavault.ui.viewmodel.MainViewModel
 import com.example.mangavault.ui.viewmodel.auth.LoginViewModel
 import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 import com.example.mangavault.ui.viewmodel.search.SearchViewModel
+import com.example.mangavault.ui.viewmodel.settings.SettingsViewModel // Import ini
 
 @Composable
 fun AppNavHost(
@@ -31,6 +28,7 @@ fun AppNavHost(
     loginViewModel: LoginViewModel,
     libraryViewModel: LibraryViewModel,
     searchViewModel: SearchViewModel,
+    settingsViewModel: SettingsViewModel, // Tambahkan Parameter Ini
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -38,8 +36,8 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier
     ) {
+        // ... (Route Login, Library, Search, About TETAP SAMA) ...
 
-        // 1. Rute Login
         composable(NavRoute.Login.route) {
             LoginScreen(
                 viewModel = loginViewModel,
@@ -51,51 +49,44 @@ fun AppNavHost(
             )
         }
 
-        // 2. Rute Library (Offline)
         composable(NavRoute.Library.route) {
+            // Hapus onLogout dari sini karena sudah pindah ke Settings
             LibraryScreen(
                 viewModel = libraryViewModel,
-                onLogout = {
-                    navController.navigate(NavRoute.Login.route) {
-                        popUpTo(NavRoute.Library.route) { inclusive = true }
-                    }
-                }
+                onLogout = { /* Tidak dipakai lagi disini */ }
+                // Jika LibraryScreen masih minta onLogout, hapus parameter itu di file LibraryScreen.kt
+                // Atau biarkan kosong sementara
             )
         }
 
-        // 3. Rute Search (Online)
         composable(NavRoute.Search.route) {
             SearchScreen(
                 viewModel = searchViewModel,
-                navController = navController // Passing navController untuk navigasi ke detail
+                navController = navController
             )
         }
 
-        // 4. Rute About
         composable(NavRoute.About.route) {
             AboutScreen()
         }
 
-        // 5. Rute Setting (Dengan Fitur Ganti Tema)
+        // --- UPDATE ROUTE SETTINGS ---
         composable(NavRoute.Setting.route) {
-            // Mengambil state tema dari MainViewModel
-            val isDarkTheme by mainViewModel.isDarkMode.collectAsState()
-
-            SettingScreen(
-                isDarkTheme = isDarkTheme,
-                onThemeChanged = { newThemeValue ->
-                    mainViewModel.toggleTheme(newThemeValue)
+            SettingsScreen(
+                viewModel = settingsViewModel,
+                onNavigateToAbout = {
+                    navController.navigate(NavRoute.About.route)
                 },
-                onLogout = {
-                    libraryViewModel.logout() // Pastikan ada fungsi logout di LibraryViewModel
+                onLogoutSuccess = {
                     navController.navigate(NavRoute.Login.route) {
-                        popUpTo(0)
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
         }
 
-        // 6. Rute Detail API (Dari Search ke Detail)
+        // ... (Route Detail API & Local TETAP SAMA) ...
+
         composable(
             route = "detail_api/{mangaId}",
             arguments = listOf(navArgument("mangaId") { type = NavType.IntType })
@@ -107,12 +98,10 @@ fun AppNavHost(
                 onBack = { navController.popBackStack() },
                 onSaveSuccess = {
                     navController.popBackStack()
-                    // Opsional: Bisa diarahkan ke Library jika diinginkan
                 }
             )
         }
 
-        // 7. Rute Detail Local (Dari Library ke Detail)
         composable(
             route = "detail_local/{mangaId}",
             arguments = listOf(navArgument("mangaId") { type = NavType.IntType })

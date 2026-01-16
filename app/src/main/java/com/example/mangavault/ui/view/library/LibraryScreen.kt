@@ -1,94 +1,125 @@
 package com.example.mangavault.ui.view.library
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.mangavault.data.local.entity.MangaEntity
 import com.example.mangavault.ui.view.components.ConfirmDeleteDialog
 import com.example.mangavault.ui.view.components.EditMangaDialog
+import com.example.mangavault.ui.view.components.LoadingIndicator
 import com.example.mangavault.ui.view.components.MangaItem
+import com.example.mangavault.ui.viewmodel.library.LibraryState
 import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     viewModel: LibraryViewModel,
-    onLogout: () -> Unit
+    onNavigateToDetail: (Int) -> Unit
 ) {
-    val mangaList by viewModel.mangaList.collectAsState()
-    val selectedManga by viewModel.selectedManga.collectAsState()
-    val mangaToDelete by viewModel.mangaToDelete.collectAsState()
+    // 1. Ambil UI State dari ViewModel
+    val uiState by viewModel.uiState.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    // 2. State Lokal untuk Dialog (Pengganti state di ViewModel)
+    var mangaToDelete by remember { mutableStateOf<MangaEntity?>(null) }
+    var mangaToEdit by remember { mutableStateOf<MangaEntity?>(null) }
 
-        /* HEADER */
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "My Manga Library",
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            TextButton(onClick = onLogout) {
-                Text("Logout")
-            }
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("My Library") })
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        /* LIST */
-        if (mangaList.isEmpty()) {
-            Text("No manga in your library")
-        } else {
-            LazyColumn {
-                items(mangaList) { manga ->
-                    MangaItem(
-                        manga = manga,
-                        onClick = {
-                            viewModel.selectManga(manga)
-                        },
-                        onDelete = {
-                            viewModel.requestDelete(manga)
-                        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) {
+            when (val state = uiState) {
+                is LibraryState.Loading -> {
+                    LoadingIndicator()
+                }
+                is LibraryState.Empty -> {
+                    Text(
+                        text = "Library is empty.\nStart searching to add manga!",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.Center)
                     )
+                }
+                is LibraryState.Error -> {
+                    Text(
+                        text = state.message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                is LibraryState.Success -> {
+                    // Tampilkan List Manga
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(150.dp),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(state.mangaList) { manga ->
+                            MangaItem(
+                                manga = manga, // FIX: Pass object manga utuh
+                                onClick = {
+                                    // Klik item untuk ke detail atau edit (tergantung preferensi)
+                                    // Disini kita set agar klik membuka detail, tapi bisa juga edit
+                                    onNavigateToDetail(manga.mangaId)
+                                },
+                                onDelete = {
+                                    // Trigger dialog delete lokal
+                                    mangaToDelete = manga
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 
-    /* EDIT DIALOG */
-    selectedManga?.let { manga ->
+    // --- LOGIKA DIALOG (Dikelola di UI, bukan ViewModel) ---
+
+    // 1. Dialog Edit (Opsional, jika ingin edit lewat klik lama atau tombol lain, bisa disesuaikan)
+    // Jika Anda ingin fitur edit muncul saat klik item (bukan ke detail), ubah onClick di atas.
+    // Atau tambahkan tombol edit di MangaItem.
+    // Jika mangaToEdit != null, tampilkan dialog:
+    mangaToEdit?.let { manga ->
         EditMangaDialog(
             manga = manga,
-            onDismiss = { viewModel.clearSelection() },
+            onDismiss = { mangaToEdit = null },
             onSave = { status, rating, volumeOwned ->
-                viewModel.updateManga(
-                    mangaId = manga.mangaId,
+                // Update object manga dengan value baru
+                val updatedManga = manga.copy(
                     status = status,
                     rating = rating,
                     volumeOwned = volumeOwned
                 )
+                viewModel.updateManga(updatedManga)
+                mangaToEdit = null
             }
         )
     }
 
-    /* CONFIRM DELETE DIALOG */
+    // 2. Dialog Delete
     mangaToDelete?.let { manga ->
         ConfirmDeleteDialog(
             title = manga.title,
             onConfirm = {
-                viewModel.confirmDelete()
+                viewModel.deleteManga(manga.mangaId)
+                mangaToDelete = null
             },
             onDismiss = {
-                viewModel.cancelDelete()
+                mangaToDelete = null
             }
         )
     }

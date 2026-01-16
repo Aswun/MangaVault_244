@@ -5,48 +5,56 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "session_prefs")
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "session_prefs")
 
 class SessionPreferences(private val context: Context) {
 
     companion object {
-        private val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
-        private val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode") // Key baru
+        private val USER_ID = intPreferencesKey("user_id")
+        private val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
     }
 
-    val isLoggedIn: Flow<Boolean> = context.dataStore.data
+    // Mendapatkan User ID (Return null jika belum login)
+    val userId: Flow<Int?> = context.dataStore.data
         .map { preferences ->
-            preferences[IS_LOGGED_IN] ?: false
+            val id = preferences[USER_ID]
+            if (id == null || id == -1) null else id
         }
 
-    // Flow untuk memantau status Dark Mode
-    // Default value: false (Light Mode). Bisa diubah true jika ingin default Dark.
+    // Cek status login berdasarkan ada/tidaknya User ID
+    val isLoggedIn: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            (preferences[USER_ID] ?: -1) != -1
+        }
+
     val isDarkMode: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[IS_DARK_MODE] ?: false
         }
 
-    suspend fun saveSession(isLoggedIn: Boolean) {
+    // Simpan session saat login berhasil
+    suspend fun saveSession(id: Int) {
         context.dataStore.edit { preferences ->
-            preferences[IS_LOGGED_IN] = isLoggedIn
+            preferences[USER_ID] = id
         }
     }
 
-    // Fungsi untuk menyimpan pilihan tema
+    // Simpan preferensi tema
     suspend fun saveTheme(isDarkMode: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_DARK_MODE] = isDarkMode
         }
     }
 
+    // Hapus session saat logout
     suspend fun clearSession() {
         context.dataStore.edit { preferences ->
-            preferences[IS_LOGGED_IN] = false
-            // Note: Biasanya tema tidak di-reset saat logout, jadi tidak perlu menghapus IS_DARK_MODE
+            preferences.remove(USER_ID)
         }
     }
 }

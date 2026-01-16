@@ -14,6 +14,7 @@ import com.example.mangavault.ui.viewmodel.MainViewModel
 import com.example.mangavault.ui.viewmodel.auth.LoginViewModel
 import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 import com.example.mangavault.ui.viewmodel.search.SearchViewModel
+import com.example.mangavault.ui.viewmodel.settings.SettingsViewModel // Import baru
 
 class MainActivity : ComponentActivity() {
 
@@ -26,28 +27,32 @@ class MainActivity : ComponentActivity() {
         setContent {
             val mainViewModel: MainViewModel = viewModel(factory = factory)
 
-            // 1. Ambil state theme
+            // Observer Tema untuk Aplikasi (Level Root)
             val isDarkTheme by mainViewModel.isDarkMode.collectAsState()
             val startDestination by mainViewModel.startDestination.collectAsState()
 
-            // 2. Pasang ke MangaVaultTheme
             MangaVaultTheme(
-                darkTheme = isDarkTheme // Override setting sistem dengan setting user
+                darkTheme = isDarkTheme
             ) {
                 val navController = rememberNavController()
 
+                // Inisialisasi Semua ViewModel
                 val loginViewModel: LoginViewModel = viewModel(factory = factory)
                 val libraryViewModel: LibraryViewModel = viewModel(factory = factory)
                 val searchViewModel: SearchViewModel = viewModel(factory = factory)
+
+                // --- TAMBAHKAN INI ---
+                val settingsViewModel: SettingsViewModel = viewModel(factory = factory)
 
                 if (startDestination != null) {
                     AppNavHost(
                         navController = navController,
                         startDestination = startDestination!!,
-                        mainViewModel = mainViewModel, // 3. Pass MainViewModel ke NavHost
+                        mainViewModel = mainViewModel,
                         loginViewModel = loginViewModel,
                         libraryViewModel = libraryViewModel,
-                        searchViewModel = searchViewModel
+                        searchViewModel = searchViewModel,
+                        settingsViewModel = settingsViewModel // Oper ke NavHost
                     )
                 }
             }
