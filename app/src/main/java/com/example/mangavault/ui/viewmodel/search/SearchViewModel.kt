@@ -13,6 +13,13 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
+/**
+ * ViewModel untuk menangani fitur Pencarian Manga.
+ * Bertanggung jawab melakukan request ke Jikan API dan menyimpan manga pilihan ke library lokal.
+ *
+ * @param searchRepository Repository untuk akses data API.
+ * @param libraryRepository Repository untuk menyimpan data ke Room Database.
+ */
 class SearchViewModel(
     private val searchRepository: SearchRepository,
     private val libraryRepository: LibraryRepository
@@ -21,7 +28,10 @@ class SearchViewModel(
     private val _state = MutableStateFlow<SearchState>(SearchState.Idle)
     val state: StateFlow<SearchState> = _state
 
-    // Helper untuk mengambil list hasil jika sukses agar bisa diakses oleh Detail Screen
+    /**
+     * Helper property untuk menyediakan akses ke hasil pencarian terakhir.
+     * Digunakan oleh Detail Screen untuk mengambil data manga tanpa request ulang.
+     */
     val results: StateFlow<List<JikanMangaDto>>
         get() = if (_state.value is SearchState.Success) {
             MutableStateFlow((_state.value as SearchState.Success).mangaList)
@@ -29,10 +39,18 @@ class SearchViewModel(
             MutableStateFlow(emptyList())
         }
 
+    /**
+     * Mencari manga berdasarkan query.
+     * Melakukan pengecekan koneksi internet terlebih dahulu sebelum request API.
+     * Menangani berbagai jenis error seperti koneksi putus atau Rate Limit (HTTP 429).
+     *
+     * @param query Kata kunci judul manga.
+     * @param context Context Android untuk pengecekan koneksi jaringan.
+     */
     fun search(query: String, context: Context) {
         if (query.isBlank()) return
 
-        // REVISI: Cek koneksi internet SEBELUM memanggil API (REQ-SEA-06)
+        // Validasi koneksi internet (REQ-SEA-06)
         if (!NetworkUtils.isInternetAvailable(context)) {
             _state.value = SearchState.Error("No internet connection. Please check your network.")
             return
@@ -48,7 +66,7 @@ class SearchViewModel(
                     _state.value = SearchState.Success(result)
                 }
             } catch (e: HttpException) {
-                // Handling Rate Limit (HTTP 429) - REQ-OTH-19
+                // Menangani Rate Limit API (REQ-OTH-19)
                 if (e.code() == 429) {
                     _state.value = SearchState.Error("Too many requests. Please wait a moment before searching again.")
                 } else {
@@ -62,7 +80,15 @@ class SearchViewModel(
         }
     }
 
-    // REVISI: Menerima parameter status, rating, dan volume dari Dialog (REQ-SEA-07)
+    /**
+     * Menyimpan manga terpilih ke koleksi lokal pengguna.
+     * Data dari API digabung dengan metadata (status, rating, volume) yang diinput user.
+     *
+     * @param manga Objek data manga dari API.
+     * @param status Status baca (Reading/Completed/Plan to Read).
+     * @param rating Penilaian pengguna (opsional).
+     * @param volumeOwned Jumlah volume yang dimiliki.
+     */
     fun saveToLibrary(
         manga: JikanMangaDto,
         status: String,
@@ -74,9 +100,9 @@ class SearchViewModel(
                 mangaId = manga.malId,
                 title = manga.title,
                 imageUrl = manga.images?.jpg?.imageUrl,
-                status = status,            // Data dari input user
-                volumeOwned = volumeOwned,  // Data dari input user
-                rating = rating             // Data dari input user
+                status = status,
+                volumeOwned = volumeOwned,
+                rating = rating
             )
         }
     }

@@ -20,11 +20,19 @@ import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 import com.example.mangavault.ui.viewmodel.search.SearchViewModel
 import com.example.mangavault.ui.viewmodel.settings.SettingsViewModel
 
+/**
+ * Entry point utama aplikasi.
+ * Bertanggung jawab untuk:
+ * 1. Menginisialisasi Tema (Dark/Light Mode).
+ * 2. Menyiapkan Navigasi (NavController).
+ * 3. Menampilkan Splash Screen (Loading) sebelum routing awal ditentukan.
+ */
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Mengambil container dependensi dari Application class
         val appContainer = (application as MangaVaultApplication).container
         val factory = ViewModelFactory(appContainer)
 
@@ -36,21 +44,18 @@ class MainActivity : ComponentActivity() {
             MangaVaultTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
 
-                // ViewModel
                 val loginViewModel: LoginViewModel = viewModel(factory = factory)
                 val libraryViewModel: LibraryViewModel = viewModel(factory = factory)
                 val searchViewModel: SearchViewModel = viewModel(factory = factory)
                 val settingsViewModel: SettingsViewModel = viewModel(factory = factory)
 
                 if (startDestination != null) {
-                    // Gunakan Scaffold untuk menempatkan BottomNavigationBar
                     Scaffold(
                         bottomBar = {
-                            // Pasang BottomNavigationBar disini
+                            // Bottom Bar ditampilkan di semua halaman utama
                             BottomNavigationBar(navController = navController)
                         }
                     ) { innerPadding ->
-                        // Terapkan padding dari Scaffold ke AppNavHost
                         AppNavHost(
                             navController = navController,
                             startDestination = startDestination!!,
@@ -59,7 +64,7 @@ class MainActivity : ComponentActivity() {
                             libraryViewModel = libraryViewModel,
                             searchViewModel = searchViewModel,
                             settingsViewModel = settingsViewModel,
-                            modifier = Modifier.padding(innerPadding) // Penting agar konten tidak tertutup bar
+                            modifier = Modifier.padding(innerPadding)
                         )
                     }
                 }

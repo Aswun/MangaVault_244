@@ -7,6 +7,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel untuk menangani logika Autentikasi (Login).
+ * Mengelola state UI dari layar Login dan berkomunikasi dengan AuthRepository.
+ *
+ * @param authRepository Repository yang menangani verifikasi kredensial user.
+ */
 class LoginViewModel(
     private val authRepository: AuthRepository
 ) : ViewModel() {
@@ -14,6 +20,13 @@ class LoginViewModel(
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState
 
+    /**
+     * Melakukan proses login dengan memvalidasi input dan memanggil repository.
+     * Mengupdate [uiState] berdasarkan hasil operasi (Loading, Success, Error).
+     *
+     * @param username Nama pengguna.
+     * @param password Kata sandi pengguna.
+     */
     fun login(
         username: String,
         password: String
@@ -38,7 +51,11 @@ class LoginViewModel(
         }
     }
 
-    // PERBAIKAN: Fungsi untuk mereset state saat user logout atau kembali ke login screen
+    /**
+     * Mereset state UI kembali ke Idle.
+     * Berguna saat pengguna logout atau menavigasi keluar dari layar login
+     * agar state sukses/error sebelumnya tidak tampil kembali.
+     */
     fun resetState() {
         _uiState.value = LoginUiState.Idle
     }

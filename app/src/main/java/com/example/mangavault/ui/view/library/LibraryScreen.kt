@@ -21,6 +21,14 @@ import com.example.mangavault.ui.viewmodel.library.LibraryState
 import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 import com.example.mangavault.ui.viewmodel.library.SortOption
 
+/**
+ * Layar Library (Koleksi Saya).
+ * Menampilkan daftar manga yang telah disimpan pengguna secara lokal.
+ * Mendukung fitur sorting, edit, dan hapus manga.
+ *
+ * @param viewModel ViewModel untuk mengambil data dari Room Database.
+ * @param onNavigateToDetail Callback navigasi ke detail manga.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
@@ -30,6 +38,7 @@ fun LibraryScreen(
     val uiState by viewModel.uiState.collectAsState()
     val sortOption by viewModel.sortOption.collectAsState()
 
+    // State lokal untuk manajemen dialog
     var mangaToDelete by remember { mutableStateOf<MangaEntity?>(null) }
     var mangaToEdit by remember { mutableStateOf<MangaEntity?>(null) }
     var showSortMenu by remember { mutableStateOf(false) }
@@ -39,9 +48,9 @@ fun LibraryScreen(
             TopAppBar(
                 title = { Text("My Library") },
                 actions = {
-                    // Tombol Sorting
+                    // Menu Sorting
                     IconButton(onClick = { showSortMenu = true }) {
-                        Icon(Icons.Default.List, contentDescription = "Sort") // Ganti Sort menjadi List
+                        Icon(Icons.Default.List, contentDescription = "Sort Options")
                     }
                     DropdownMenu(
                         expanded = showSortMenu,
@@ -120,7 +129,7 @@ fun LibraryScreen(
         }
     }
 
-    // Dialog Edit
+    // Menampilkan Dialog Edit jika ada manga yang dipilih untuk diedit
     mangaToEdit?.let { manga ->
         EditMangaDialog(
             manga = manga,
@@ -137,7 +146,7 @@ fun LibraryScreen(
         )
     }
 
-    // Dialog Delete
+    // Menampilkan Dialog Konfirmasi Hapus jika ada manga yang dipilih untuk dihapus
     mangaToDelete?.let { manga ->
         ConfirmDeleteDialog(
             title = manga.title,

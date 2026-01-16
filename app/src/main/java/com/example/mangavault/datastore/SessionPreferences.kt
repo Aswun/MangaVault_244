@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "session_prefs")
 
+/**
+ * Wrapper class untuk mengelola penyimpanan preferensi lokal menggunakan DataStore.
+ * Menyimpan data sesi pengguna (UserID) dan preferensi tema (Dark/Light).
+ */
 class SessionPreferences(private val context: Context) {
 
     companion object {
@@ -19,39 +23,53 @@ class SessionPreferences(private val context: Context) {
         private val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
     }
 
-    // Mendapatkan User ID (Return null jika belum login)
+    /**
+     * Mendapatkan ID pengguna yang sedang login.
+     * Mengembalikan null jika belum ada user yang login.
+     */
     val userId: Flow<Int?> = context.dataStore.data
         .map { preferences ->
             val id = preferences[USER_ID]
             if (id == null || id == -1) null else id
         }
 
-    // Cek status login berdasarkan ada/tidaknya User ID
+    /**
+     * Flow boolean yang menunjukkan apakah ada user yang sedang login.
+     */
     val isLoggedIn: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             (preferences[USER_ID] ?: -1) != -1
         }
 
+    /**
+     * Preferensi tema aplikasi (True = Dark Mode).
+     */
     val isDarkMode: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[IS_DARK_MODE] ?: false
         }
 
-    // Simpan session saat login berhasil
+    /**
+     * Menyimpan sesi login pengguna.
+     */
     suspend fun saveSession(id: Int) {
         context.dataStore.edit { preferences ->
             preferences[USER_ID] = id
         }
     }
 
-    // Simpan preferensi tema
+    /**
+     * Menyimpan pilihan tema pengguna.
+     */
     suspend fun saveTheme(isDarkMode: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_DARK_MODE] = isDarkMode
         }
     }
 
-    // Hapus session saat logout
+    /**
+     * Menghapus sesi pengguna (Logout).
+     */
     suspend fun clearSession() {
         context.dataStore.edit { preferences ->
             preferences.remove(USER_ID)

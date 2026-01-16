@@ -3,6 +3,14 @@ package com.example.mangavault.ui.view.components
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 
+/**
+ * Dialog Konfirmasi untuk aksi penghapusan data.
+ * Mencegah penghapusan tidak sengaja sesuai REQ-SAFE-01.
+ *
+ * @param title Judul item yang akan dihapus.
+ * @param onConfirm Callback jika user menekan tombol Delete.
+ * @param onDismiss Callback jika user membatalkan.
+ */
 @Composable
 fun ConfirmDeleteDialog(
     title: String,

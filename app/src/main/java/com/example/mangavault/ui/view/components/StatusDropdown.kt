@@ -5,6 +5,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 
+/**
+ * Komponen Dropdown Menu untuk memilih status baca manga.
+ *
+ * @param currentStatus Status saat ini yang akan ditampilkan.
+ * @param onStatusSelected Callback yang dipanggil saat user memilih status baru.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatusDropdown(
@@ -12,7 +18,6 @@ fun StatusDropdown(
     onStatusSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    // Opsi status sesuai dengan format yang diinginkan
     val options = listOf("Reading", "Completed", "Plan to Read")
 
     ExposedDropdownMenuBox(

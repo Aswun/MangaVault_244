@@ -14,6 +14,10 @@ import com.example.mangavault.util.PasswordHasher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
+/**
+ * Database utama Room untuk aplikasi.
+ * Menyimpan tabel User dan Manga.
+ */
 @Database(
     entities = [UserEntity::class, MangaEntity::class],
     version = 1,
@@ -25,28 +29,25 @@ abstract class MangaVaultDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun mangaDao(): MangaDao
 
-    // Callback untuk mengisi data awal (Seeding)
+    /**
+     * Callback untuk mengisi data awal (Seeding) saat database pertama kali dibuat.
+     */
     private class MangaDatabaseCallback(
-        private val scope: CoroutineScope // Scope tidak lagi digunakan untuk insert, tapi dibiarkan agar tidak merubah signature constructor
+        private val scope: CoroutineScope
     ) : Callback() {
 
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
 
-            // REVISI PENTING: Menggunakan execSQL untuk insert Sync.
-            // Ini mencegah Race Condition di mana login dilakukan sebelum data selesai dibuat.
-
-            // 1. Hash Password
+            // Mengisi data user dummy secara synchronous untuk memastikan data siap saat login
             val passAswin = PasswordHasher.hash("aswin123")
-            val passArdhi = PasswordHasher.hash("ardhi123") // User ke-2
+            val passArdhi = PasswordHasher.hash("ardhi123")
 
-            // 2. Insert User 1: aswin
             db.execSQL(
                 "INSERT INTO users (username, passwordHash) VALUES (?, ?)",
                 arrayOf("aswin", passAswin)
             )
 
-            // 3. Insert User 2: ardhi
             db.execSQL(
                 "INSERT INTO users (username, passwordHash) VALUES (?, ?)",
                 arrayOf("ardhi", passArdhi)
@@ -58,6 +59,12 @@ abstract class MangaVaultDatabase : RoomDatabase() {
         @Volatile
         private var Instance: MangaVaultDatabase? = null
 
+        /**
+         * Mendapatkan instance singleton database.
+         *
+         * @param context Context aplikasi.
+         * @return Instance MangaVaultDatabase.
+         */
         fun getDatabase(context: Context): MangaVaultDatabase {
             return Instance ?: synchronized(this) {
                 val scope = CoroutineScope(Dispatchers.IO)

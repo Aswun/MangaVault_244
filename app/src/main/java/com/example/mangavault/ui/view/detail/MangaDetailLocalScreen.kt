@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -12,13 +12,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.mangavault.ui.view.components.ConfirmDeleteDialog
 import com.example.mangavault.ui.view.components.EditMangaDialog
 import com.example.mangavault.ui.viewmodel.library.LibraryState
 import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 
+/**
+ * Layar Detail Manga Lokal (Library).
+ * Menampilkan informasi lengkap mengenai manga yang telah disimpan di database lokal.
+ * Fitur:
+ * - Melihat detail (Cover, Judul, Status, Rating, Volume).
+ * - Mengedit data manga (Status, Rating, Volume) via Dialog.
+ * - Menghapus manga dari library via Dialog Konfirmasi.
+ *
+ * @param mangaId ID unik manga yang akan ditampilkan detailnya.
+ * @param viewModel ViewModel Library untuk operasi update dan delete.
+ * @param onBack Callback navigasi untuk kembali ke layar sebelumnya.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaDetailLocalScreen(
@@ -26,100 +41,142 @@ fun MangaDetailLocalScreen(
     viewModel: LibraryViewModel,
     onBack: () -> Unit
 ) {
+    // Mengambil state UI terkini dari LibraryViewModel
     val uiState by viewModel.uiState.collectAsState()
 
-    // Ambil data manga dari state Success
+    // Mencari objek manga spesifik berdasarkan ID dari daftar manga di state Success
     val manga = (uiState as? LibraryState.Success)?.mangaList?.find { it.mangaId == mangaId }
+
+    // State lokal untuk mengontrol visibilitas dialog
     var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Collection") },
+                title = {
+                    Text(
+                        text = manga?.title ?: "Detail Manga",
+                        maxLines = 1
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        manga?.let {
-                            viewModel.deleteManga(it.mangaId)
-                            onBack()
+                    if (manga != null) {
+                        // Tombol Edit: Membuka dialog edit
+                        IconButton(onClick = { showEditDialog = true }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit")
                         }
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                        // Tombol Delete: Membuka dialog konfirmasi hapus
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        }
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showEditDialog = true }) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit Progress")
-            }
         }
-    ) { padding ->
-        if (manga == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Manga not found in library")
-            }
-        } else {
+    ) { paddingValues ->
+        if (manga != null) {
             Column(
                 modifier = Modifier
+                    .padding(paddingValues)
                     .fillMaxSize()
-                    .padding(padding)
                     .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Menampilkan Gambar Cover Manga
                 AsyncImage(
-                    model = manga.imageUrl,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(manga.imageUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = manga.title,
-                    modifier = Modifier.fillMaxWidth().height(350.dp),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .height(350.dp)
+                        .fillMaxWidth()
                 )
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = manga.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Menampilkan Judul Manga
+                Text(
+                    text = manga.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Kartu Informasi Detail (Status, Volume, Rating)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Reading Progress", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                DetailItem(label = "Status", value = manga.status)
-                                DetailItem(label = "Volumes", value = "${manga.volumeOwned}")
-                                DetailItem(label = "My Rating", value = if (manga.rating != null && manga.rating > 0) "${manga.rating}/10" else "-")
-                            }
-                        }
+                        Text("Status: ${manga.status}", style = MaterialTheme.typography.bodyLarge)
+                        Text("Volume Owned: ${manga.volumeOwned}", style = MaterialTheme.typography.bodyLarge)
+                        Text("Rating: ${manga.rating ?: "-"}/10", style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
 
+            // --- DIALOG EDIT ---
+            // Menangani input user untuk memperbarui data manga
             if (showEditDialog) {
                 EditMangaDialog(
                     manga = manga,
                     onDismiss = { showEditDialog = false },
-                    onSave = { status, rating, volumeOwned ->
+                    onSave = { status, rating, volume ->
                         viewModel.updateManga(
-                            manga.copy(status = status, rating = rating, volumeOwned = volumeOwned)
+                            manga.copy(
+                                status = status,
+                                rating = rating,
+                                volumeOwned = volume
+                            )
                         )
                         showEditDialog = false
                     }
                 )
             }
-        }
-    }
-}
 
-@Composable
-fun DetailItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+            // --- DIALOG DELETE ---
+            // Menangani konfirmasi penghapusan data
+            if (showDeleteDialog) {
+                ConfirmDeleteDialog(
+                    title = manga.title,
+                    onConfirm = {
+                        // 1. Eksekusi hapus di ViewModel
+                        viewModel.deleteManga(manga.mangaId)
+                        // 2. Tutup dialog
+                        showDeleteDialog = false
+                        // 3. Kembali ke layar Library karena item sudah tidak ada
+                        onBack()
+                    },
+                    onDismiss = {
+                        showDeleteDialog = false
+                    }
+                )
+            }
+
+        } else {
+            // Tampilan Loading atau Fallback jika data manga tidak ditemukan/sedang dimuat
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
     }
 }

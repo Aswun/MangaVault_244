@@ -10,11 +10,21 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 
+/**
+ * Repository untuk mengelola data koleksi manga (Library).
+ * Memastikan data yang diakses hanya milik pengguna yang sedang login.
+ */
 class LibraryRepository(
     private val mangaDao: MangaDao,
     private val sessionPreferences: SessionPreferences
 ) {
-    // REVISI: Menggunakan flatMapLatest agar Flow bereaksi terhadap perubahan userId (Login/Logout)
+    /**
+     * Mengambil daftar manga milik user yang sedang login secara reaktif.
+     * Menggunakan [flatMapLatest] untuk memantau perubahan userId (misal saat login/logout),
+     * sehingga data yang dikembalikan selalu sinkron dengan user aktif.
+     *
+     * @param sortOption Kriteria pengurutan (Judul, Status, atau Rating).
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun getUserManga(sortOption: SortOption): Flow<List<MangaEntity>> {
         return sessionPreferences.userId.flatMapLatest { userId ->
@@ -30,6 +40,9 @@ class LibraryRepository(
         }
     }
 
+    /**
+     * Menyimpan manga baru ke koleksi user yang sedang login.
+     */
     suspend fun saveManga(
         mangaId: Int,
         title: String,
@@ -53,6 +66,9 @@ class LibraryRepository(
         }
     }
 
+    /**
+     * Menghapus manga dari koleksi user.
+     */
     suspend fun deleteManga(mangaId: Int) {
         val userId = sessionPreferences.userId.first()
         if (userId != null) {
@@ -60,6 +76,10 @@ class LibraryRepository(
         }
     }
 
+    /**
+     * Memperbarui metadata manga milik user.
+     * Melakukan validasi userId terlebih dahulu untuk keamanan data.
+     */
     suspend fun updateManga(
         mangaId: Int,
         userId: Int,
@@ -67,8 +87,8 @@ class LibraryRepository(
         rating: Int?,
         volumeOwned: Int
     ) {
-        // Pastikan userId valid sebelum update (untuk keamanan)
         val currentUserId = sessionPreferences.userId.first()
+        // Pastikan hanya pemilik data yang bisa melakukan update
         if (currentUserId != null && currentUserId == userId) {
             mangaDao.updateManga(mangaId, userId, status, rating, volumeOwned)
         }

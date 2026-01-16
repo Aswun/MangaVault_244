@@ -20,6 +20,18 @@ import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 import com.example.mangavault.ui.viewmodel.search.SearchViewModel
 import com.example.mangavault.ui.viewmodel.settings.SettingsViewModel
 
+/**
+ * Komponen utama navigasi aplikasi (Navigation Graph).
+ * Mengatur perpindahan antar layar (Screen) berdasarkan rute (Route).
+ *
+ * @param navController Controller navigasi dari Jetpack Navigation.
+ * @param startDestination Rute awal yang ditampilkan saat aplikasi dibuka.
+ * @param mainViewModel ViewModel global (jika diperlukan).
+ * @param loginViewModel ViewModel untuk logika autentikasi.
+ * @param libraryViewModel ViewModel untuk pengelolaan data koleksi manga lokal.
+ * @param searchViewModel ViewModel untuk pencarian manga via API.
+ * @param settingsViewModel ViewModel untuk pengaturan aplikasi.
+ */
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -36,6 +48,7 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier
     ) {
+        // Halaman Login
         composable(NavRoute.Login.route) {
             LoginScreen(
                 viewModel = loginViewModel,
@@ -47,6 +60,7 @@ fun AppNavHost(
             )
         }
 
+        // Halaman Library (Koleksi Lokal)
         composable(NavRoute.Library.route) {
             LibraryScreen(
                 viewModel = libraryViewModel,
@@ -56,6 +70,7 @@ fun AppNavHost(
             )
         }
 
+        // Halaman Pencarian (Online)
         composable(NavRoute.Search.route) {
             SearchScreen(
                 viewModel = searchViewModel,
@@ -63,10 +78,12 @@ fun AppNavHost(
             )
         }
 
+        // Halaman About
         composable(NavRoute.About.route) {
             AboutScreen()
         }
 
+        // Halaman Settings
         composable(NavRoute.Setting.route) {
             SettingsScreen(
                 viewModel = settingsViewModel,
@@ -74,7 +91,7 @@ fun AppNavHost(
                     navController.navigate(NavRoute.About.route)
                 },
                 onLogoutSuccess = {
-                    // PERBAIKAN: Reset state LoginViewModel agar tidak auto-login
+                    // Reset state saat logout agar tidak auto-login kembali
                     loginViewModel.resetState()
 
                     navController.navigate(NavRoute.Login.route) {
@@ -82,7 +99,7 @@ fun AppNavHost(
                     }
                 },
                 onLoginClick = {
-                    // PERBAIKAN: Reset state juga saat tombol login manual ditekan
+                    // Reset state saat masuk halaman login secara manual
                     loginViewModel.resetState()
 
                     navController.navigate(NavRoute.Login.route)
@@ -90,6 +107,7 @@ fun AppNavHost(
             )
         }
 
+        // Halaman Detail Manga dari API (Preview sebelum save)
         composable(
             route = NavRoute.DetailApi.route,
             arguments = listOf(navArgument("mangaId") { type = NavType.IntType })
@@ -103,6 +121,7 @@ fun AppNavHost(
             )
         }
 
+        // Halaman Detail Manga Lokal (View/Edit/Delete)
         composable(
             route = NavRoute.DetailLocal.route,
             arguments = listOf(navArgument("mangaId") { type = NavType.IntType })

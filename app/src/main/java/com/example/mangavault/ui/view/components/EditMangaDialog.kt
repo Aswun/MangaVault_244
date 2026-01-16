@@ -9,6 +9,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.mangavault.data.local.entity.MangaEntity
 
+/**
+ * Dialog Komponen untuk Mengedit atau Menambahkan Metadata Manga.
+ * Menyediakan form input untuk Status Baca, Volume Dimiliki, dan Rating.
+ * Melakukan validasi input rating agar berada di rentang 1-10.
+ *
+ * @param manga Objek manga yang akan diedit (atau template baru).
+ * @param onDismiss Callback saat dialog ditutup.
+ * @param onSave Callback saat tombol Save ditekan, mengembalikan nilai inputan.
+ */
 @Composable
 fun EditMangaDialog(
     manga: MangaEntity,
@@ -25,9 +34,9 @@ fun EditMangaDialog(
 
     var isRatingError by remember { mutableStateOf(false) }
 
-    // Validasi Rating: Harus 1-10 atau kosong (null)
+    // Fungsi Validasi Rating (1-10)
     fun validateRating(input: String): Boolean {
-        if (input.isBlank()) return true
+        if (input.isBlank()) return true // Boleh kosong (null)
         val num = input.toIntOrNull()
         return num != null && num in 1..10
     }
@@ -81,7 +90,6 @@ fun EditMangaDialog(
                         volumeString.toIntOrNull() ?: 0
                     )
                 },
-                // Disable tombol jika ada error validasi
                 enabled = !isRatingError
             ) {
                 Text("Save")

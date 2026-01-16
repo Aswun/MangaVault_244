@@ -13,6 +13,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel Global untuk MainActivity.
+ * Menangani logika inisialisasi aplikasi seperti:
+ * 1. Pengecekan sesi login untuk menentukan rute awal (Start Destination).
+ * 2. Menyediakan state Dark Mode untuk seluruh aplikasi.
+ * 3. Mengelola state loading (Splash Screen).
+ */
 class MainViewModel(
     private val sessionPreferences: SessionPreferences
 ) : ViewModel() {
@@ -23,8 +30,7 @@ class MainViewModel(
     private val _startDestination = MutableStateFlow<String?>(null)
     val startDestination: StateFlow<String?> = _startDestination.asStateFlow()
 
-    // PERBAIKAN: Menggunakan stateIn untuk mengubah Flow menjadi StateFlow
-    // Ini memperbaiki error "No value passed for parameter 'initial'" di MainActivity
+    // Mengubah Flow preferensi menjadi StateFlow agar UI dapat langsung merender tema awal
     val isDarkMode: StateFlow<Boolean> = sessionPreferences.isDarkMode
         .stateIn(
             scope = viewModelScope,
@@ -38,7 +44,7 @@ class MainViewModel(
 
     private fun observeSession() {
         viewModelScope.launch {
-            // Mengambil status login sekali saja (first) untuk inisialisasi awal
+            // Cek status login sekali di awal untuk routing
             val isLoggedIn = sessionPreferences.isLoggedIn.first()
 
             _startDestination.value = if (isLoggedIn) {
@@ -47,7 +53,7 @@ class MainViewModel(
                 NavRoute.Login.route
             }
 
-            // Simulasi delay splash screen
+            // Delay buatan agar splash screen tidak terlalu cepat hilang (estetika)
             delay(500)
             _isLoading.value = false
         }

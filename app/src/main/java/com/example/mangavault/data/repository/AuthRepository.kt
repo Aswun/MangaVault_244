@@ -4,13 +4,23 @@ import com.example.mangavault.data.local.dao.UserDao
 import com.example.mangavault.datastore.SessionPreferences
 import com.example.mangavault.util.PasswordHasher
 
+/**
+ * Repository yang menangani logika Autentikasi Pengguna.
+ * Menghubungkan database lokal (UserDao) dan penyimpanan sesi (SessionPreferences).
+ */
 class AuthRepository(
     private val userDao: UserDao,
     private val sessionPreferences: SessionPreferences
 ) {
 
     /**
-     * Login lokal
+     * Melakukan proses login lokal.
+     * Memverifikasi username dan mencocokkan hash password.
+     * Jika valid, sesi pengguna akan disimpan.
+     *
+     * @param username Nama pengguna inputan user.
+     * @param password Password inputan user (plain text).
+     * @return Result.success jika login berhasil, Result.failure jika gagal.
      */
     suspend fun login(
         username: String,
@@ -37,6 +47,9 @@ class AuthRepository(
         return Result.success(Unit)
     }
 
+    /**
+     * Menghapus sesi pengguna saat ini (Logout).
+     */
     suspend fun logout() {
         sessionPreferences.clearSession()
     }

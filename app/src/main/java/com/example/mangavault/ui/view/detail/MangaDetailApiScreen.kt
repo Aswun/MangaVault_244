@@ -20,6 +20,16 @@ import com.example.mangavault.data.local.entity.MangaEntity
 import com.example.mangavault.ui.view.components.EditMangaDialog
 import com.example.mangavault.ui.viewmodel.search.SearchViewModel
 
+/**
+ * Layar Detail Manga (Versi API/Online).
+ * Menampilkan informasi detail manga yang diambil dari hasil pencarian API.
+ * Menyediakan opsi untuk menyimpan manga ke Library lokal.
+ *
+ * @param mangaId ID Manga (MAL ID) yang dipilih.
+ * @param viewModel ViewModel untuk mengakses data hasil pencarian sebelumnya.
+ * @param onBack Callback navigasi kembali.
+ * @param onSaveSuccess Callback saat manga berhasil disimpan.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MangaDetailApiScreen(
@@ -28,11 +38,11 @@ fun MangaDetailApiScreen(
     onBack: () -> Unit,
     onSaveSuccess: () -> Unit
 ) {
-    // Mengambil data manga dari state results ViewModel berdasarkan ID
+    // Mengambil data detail manga dari cache hasil pencarian di ViewModel
     val manga = viewModel.results.collectAsState().value.find { it.malId == mangaId }
     val context = LocalContext.current
 
-    // State untuk mengontrol visibilitas Dialog
+    // State untuk kontrol dialog "Add to Library"
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -48,7 +58,6 @@ fun MangaDetailApiScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                // REVISI: Jangan langsung save. Buka dialog dulu jika data manga ada.
                 if (manga != null) {
                     showAddDialog = true
                 }
@@ -68,7 +77,7 @@ fun MangaDetailApiScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Gambar Cover
+                // Header Gambar
                 AsyncImage(
                     model = manga.images?.jpg?.largeImageUrl ?: manga.images?.jpg?.imageUrl,
                     contentDescription = manga.title,
@@ -79,7 +88,7 @@ fun MangaDetailApiScreen(
                 )
 
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // Judul
+                    // Judul & Info Dasar
                     Text(
                         text = manga.title,
                         style = MaterialTheme.typography.headlineSmall,
@@ -88,7 +97,6 @@ fun MangaDetailApiScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Badge Informasi
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         MangaInfoBadge(label = "Score", value = manga.score?.toString() ?: "N/A")
                         MangaInfoBadge(label = "Type", value = manga.type ?: "?")
@@ -113,15 +121,14 @@ fun MangaDetailApiScreen(
         }
     }
 
-    // LOGIKA DIALOG (REQ-SEA-07)
+    // Dialog Input Metadata sebelum Simpan
     if (showAddDialog && manga != null) {
-        // Membuat objek sementara MangaEntity untuk mengisi nilai default di Dialog
         val tempEntity = MangaEntity(
             mangaId = manga.malId,
-            userId = 0, // Dummy ID, akan diurus oleh Repository
+            userId = 0,
             title = manga.title,
             imageUrl = manga.images?.jpg?.imageUrl,
-            status = "Plan to Read", // Default Status
+            status = "Plan to Read",
             volumeOwned = 0,
             rating = null
         )
@@ -130,15 +137,12 @@ fun MangaDetailApiScreen(
             manga = tempEntity,
             onDismiss = { showAddDialog = false },
             onSave = { status, rating, volume ->
-                // Panggil ViewModel dengan data lengkap
                 viewModel.saveToLibrary(
                     manga = manga,
                     status = status,
                     rating = rating,
                     volumeOwned = volume
                 )
-
-                // Tampilkan notifikasi dan tutup halaman detail
                 Toast.makeText(context, "${manga.title} added to Library", Toast.LENGTH_SHORT).show()
                 showAddDialog = false
                 onSaveSuccess()

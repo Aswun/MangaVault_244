@@ -2,22 +2,29 @@ package com.example.mangavault.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
-// Menggunakan Generic <T> agar bisa dipakai untuk List maupun Single Object
+/**
+ * Data class wrapper untuk respons API Jikan.
+ * Menggunakan Generic T agar fleksibel untuk berbagai tipe data.
+ */
 data class JikanResponse<T>(
     @SerializedName("data")
     val data: T,
 
-    // Pagination biasanya hanya ada di search, jadi kita buat nullable
     @SerializedName("pagination")
     val pagination: PaginationDto? = null
 )
 
-// Class baru untuk respons single detail (jika nanti dibutuhkan fetch by ID)
+/**
+ * Wrapper khusus untuk respons single object (detail manga).
+ */
 data class JikanSingleResponse(
     @SerializedName("data")
     val data: JikanMangaDto
 )
 
+/**
+ * Data Transfer Object (DTO) untuk merepresentasikan Manga dari API.
+ */
 data class JikanMangaDto(
     @SerializedName("mal_id")
     val malId: Int,
@@ -27,18 +34,23 @@ data class JikanMangaDto(
     @SerializedName("images")
     val images: ImageWrapper?,
 
-    // Field tambahan untuk detail lengkap
     val synopsis: String?,
     val type: String?,
     val status: String?,
     val score: Double?
 )
 
+/**
+ * Wrapper untuk struktur JSON images.
+ */
 data class ImageWrapper(
     @SerializedName("jpg")
     val jpg: ImageJpg?
 )
 
+/**
+ * Wrapper untuk URL gambar JPG.
+ */
 data class ImageJpg(
     @SerializedName("image_url")
     val imageUrl: String?,
@@ -47,6 +59,9 @@ data class ImageJpg(
     val largeImageUrl: String?
 )
 
+/**
+ * Informasi pagination dari API.
+ */
 data class PaginationDto(
     @SerializedName("last_visible_page")
     val lastVisiblePage: Int,

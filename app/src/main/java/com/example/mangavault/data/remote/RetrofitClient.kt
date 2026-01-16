@@ -5,6 +5,11 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+/**
+ * Singleton Object untuk konfigurasi Retrofit Client.
+ * Menyediakan instance [JikanApiService] untuk melakukan request ke API.
+ * Dilengkapi dengan Logging Interceptor untuk debugging response API.
+ */
 object RetrofitClient {
 
     private const val BASE_URL = "https://api.jikan.moe/v4/"

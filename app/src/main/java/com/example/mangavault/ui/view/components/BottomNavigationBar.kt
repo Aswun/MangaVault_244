@@ -15,28 +15,33 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.mangavault.ui.navigation.NavRoute
 
-// Model data sederhana untuk item navigasi
+/**
+ * Data class untuk mendefinisikan item menu pada navigasi bawah.
+ */
 data class BottomNavItem(
     val label: String,
     val icon: ImageVector,
     val route: String
 )
 
+/**
+ * Komponen Bottom Navigation Bar aplikasi.
+ * Menangani navigasi antara Library, Search, dan Settings.
+ * Otomatis menyembunyikan diri jika berada di route yang tidak terdaftar.
+ *
+ * @param navController NavController untuk menangani perpindahan layar.
+ */
 @Composable
 fun BottomNavigationBar(navController: NavController) {
-    // Daftar menu navigasi bawah
     val items = listOf(
         BottomNavItem("Library", Icons.Default.Collections, NavRoute.Library.route),
         BottomNavItem("Search", Icons.Default.Search, NavRoute.Search.route),
         BottomNavItem("Settings", Icons.Default.Settings, NavRoute.Setting.route)
     )
 
-    // Mendapatkan route saat ini untuk menentukan item mana yang aktif
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Tampilkan NavigationBar hanya jika route saat ini termasuk dalam menu bawah
-    // Ini mencegah bar muncul di halaman Login atau Detail yang tidak diinginkan
     val showBottomBar = items.any { it.route == currentRoute }
 
     if (showBottomBar) {
@@ -48,13 +53,10 @@ fun BottomNavigationBar(navController: NavController) {
                     selected = currentRoute == item.route,
                     onClick = {
                         navController.navigate(item.route) {
-                            // Pop up ke start destination graph agar tidak menumpuk stack
                             popUpTo(NavRoute.Library.route) {
                                 saveState = true
                             }
-                            // Hindari duplikasi instance jika user mengetuk tombol yang sama
                             launchSingleTop = true
-                            // Restore state saat kembali ke item tersebut
                             restoreState = true
                         }
                     }

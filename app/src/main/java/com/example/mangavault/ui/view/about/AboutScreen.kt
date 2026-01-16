@@ -5,12 +5,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 
+/**
+ * Layar Tentang Aplikasi (About).
+ * Menampilkan informasi versi, pengembang, dan tautan eksternal.
+ */
 @Composable
 fun AboutScreen() {
     val uriHandler = LocalUriHandler.current
@@ -65,20 +68,17 @@ fun AboutScreen() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Tautan ke Repository (REQ-OTH-14)
         Text(
             text = "Project Repository (GitHub)",
             color = MaterialTheme.colorScheme.primary,
             textDecoration = TextDecoration.Underline,
             modifier = Modifier
                 .clickable {
-                    // Ganti URL dengan repository sebenarnya jika ada
                     uriHandler.openUri("https://github.com/Aswun/MangaVault_244")
                 }
                 .padding(vertical = 4.dp)
         )
 
-        // Tautan ke Jikan API (REQ-OTH-15)
         Text(
             text = "Jikan API Documentation",
             color = MaterialTheme.colorScheme.primary,

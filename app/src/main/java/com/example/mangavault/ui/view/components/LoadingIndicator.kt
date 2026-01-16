@@ -7,6 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
+/**
+ * Komponen UI standar untuk menampilkan indikator loading (Circular Progress) di tengah layar.
+ *
+ * @param modifier Modifier opsional untuk penyesuaian layout.
+ */
 @Composable
 fun LoadingIndicator(modifier: Modifier = Modifier) {
     Box(

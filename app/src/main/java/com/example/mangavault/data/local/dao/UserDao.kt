@@ -6,17 +6,22 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.mangavault.data.local.entity.UserEntity
 
+/**
+ * Data Access Object (DAO) untuk tabel Users.
+ * Menangani operasi registrasi (insert) dan pengambilan data user untuk login.
+ */
 @Dao
 interface UserDao {
 
+    // Menambahkan user baru. Gagal jika username sudah ada (ABORT).
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertUser(user: UserEntity)
 
+    // Mencari user berdasarkan username (untuk validasi login)
     @Query("SELECT * FROM users WHERE username = :username LIMIT 1")
     suspend fun getUserByUsername(username: String): UserEntity?
 
+    // Mencari user berdasarkan ID
     @Query("SELECT * FROM users WHERE userId = :userId LIMIT 1")
     suspend fun getUserById(userId: Int): UserEntity?
-
-
 }

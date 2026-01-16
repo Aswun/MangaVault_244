@@ -15,6 +15,13 @@ import androidx.compose.ui.unit.dp
 import com.example.mangavault.ui.viewmodel.auth.LoginUiState
 import com.example.mangavault.ui.viewmodel.auth.LoginViewModel
 
+/**
+ * Layar Login Aplikasi.
+ * Menangani input username dan password serta validasi state login.
+ *
+ * @param viewModel ViewModel untuk logika autentikasi.
+ * @param onLoginSuccess Callback navigasi yang dipanggil jika login berhasil.
+ */
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
@@ -24,8 +31,6 @@ fun LoginScreen(
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
-    // State untuk mengatur visibilitas password (Hidden/Visible)
     var passwordVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState) {
@@ -59,18 +64,15 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Input Password dengan Toggle Visibility
+        // Input Password
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            // Mengubah tampilan teks menjadi titik-titik jika passwordVisible false
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            // Mengatur keyboard agar sesuai untuk input password
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            // Menambahkan ikon mata di sebelah kanan
             trailingIcon = {
                 val image = if (passwordVisible)
                     Icons.Filled.Visibility
@@ -94,7 +96,6 @@ fun LoginScreen(
             enabled = uiState !is LoginUiState.Loading
         ) {
             if (uiState is LoginUiState.Loading) {
-                // Tampilkan loading kecil di dalam tombol jika sedang proses
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
                     color = MaterialTheme.colorScheme.onPrimary,
@@ -105,7 +106,7 @@ fun LoginScreen(
             }
         }
 
-        // Pesan Error jika Login Gagal
+        // Tampilan Error
         if (uiState is LoginUiState.Error) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(

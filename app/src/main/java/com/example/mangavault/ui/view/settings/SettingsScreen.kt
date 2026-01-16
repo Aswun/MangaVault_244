@@ -11,16 +11,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.mangavault.ui.viewmodel.settings.SettingsViewModel
 
+/**
+ * Layar Pengaturan (Settings).
+ * Menyediakan opsi untuk mengubah tampilan aplikasi (Dark/Light Mode) dan manajemen akun.
+ * Tampilan tombol akan menyesuaikan dengan status login pengguna (Login vs Logout).
+ *
+ * @param viewModel ViewModel pengaturan.
+ * @param onLogoutSuccess Callback yang dijalankan setelah logout berhasil.
+ * @param onNavigateToAbout Callback navigasi ke halaman About.
+ * @param onLoginClick Callback navigasi ke halaman Login (jika user belum login).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onLogoutSuccess: () -> Unit,
     onNavigateToAbout: () -> Unit,
-    onLoginClick: () -> Unit // PERBAIKAN: Tambahkan callback navigasi Login
+    onLoginClick: () -> Unit
 ) {
     val isDarkMode by viewModel.isDarkMode.collectAsState()
-    val isLoggedIn by viewModel.isLoggedIn.collectAsState() // Ambil status login
+    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -34,7 +44,7 @@ fun SettingsScreen(
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
-            // Appearance
+            // Bagian Tampilan (Appearance)
             Text("Appearance", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(8.dp))
             Row(
@@ -51,13 +61,12 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-            // Account
+            // Bagian Akun (Account)
             Text("Account", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // PERBAIKAN: Logika Kondisional Tombol
+            // Menentukan tombol yang ditampilkan berdasarkan status login
             if (isLoggedIn) {
-                // Tampilkan Tombol Logout jika User Login
                 Button(
                     onClick = { showLogoutDialog = true },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
@@ -66,9 +75,8 @@ fun SettingsScreen(
                     Text("Logout")
                 }
             } else {
-                // Tampilkan Tombol Login jika User Belum Login
                 Button(
-                    onClick = onLoginClick, // Panggil callback navigasi
+                    onClick = onLoginClick,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
@@ -79,7 +87,7 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-            // About
+            // Bagian Informasi (About)
             OutlinedButton(
                 onClick = onNavigateToAbout,
                 modifier = Modifier.fillMaxWidth()
@@ -90,7 +98,7 @@ fun SettingsScreen(
             }
         }
 
-        // KONFIRMASI LOGOUT
+        // Dialog Konfirmasi Logout
         if (showLogoutDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutDialog = false },

@@ -1,20 +1,14 @@
 package com.example.mangavault.ui.view.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +21,14 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.mangavault.data.local.entity.MangaEntity
 
+/**
+ * Komponen UI untuk menampilkan satu item manga dalam Grid/List.
+ * Menampilkan gambar cover, judul, status, dan rating.
+ *
+ * @param manga Objek data manga (Entity).
+ * @param onClick Callback saat item diklik.
+ * @param onDelete Callback saat item ingin dihapus (opsional, tergantung implementasi parent).
+ */
 @Composable
 fun MangaItem(
     manga: MangaEntity,
@@ -36,8 +38,6 @@ fun MangaItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            // Menambahkan padding antar item grid ditangani oleh LazyVerticalGrid,
-            // tapi kita beri sedikit margin vertikal jika perlu
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
@@ -45,33 +45,30 @@ fun MangaItem(
         )
     ) {
         Column {
-            // 1. Cover Image (Bagian Atas)
-            // Menggunakan Box atau langsung AsyncImage dengan height fix agar seragam
+            // Menampilkan gambar cover manga
             AsyncImage(
                 model = manga.imageUrl,
                 contentDescription = "Cover of ${manga.title}",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp), // Tinggi fix agar grid terlihat rapi
-                contentScale = ContentScale.Crop // Memotong gambar agar memenuhi kotak
+                    .height(200.dp),
+                contentScale = ContentScale.Crop
             )
 
-            // 2. Informasi Manga (Bagian Bawah)
+            // Menampilkan detail informasi manga
             Column(
                 modifier = Modifier.padding(12.dp)
             ) {
-                // Judul
                 Text(
                     text = manga.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 2, // Batasi 2 baris agar tidak terlalu panjang
-                    overflow = TextOverflow.Ellipsis // Tambahkan "..." jika kepanjangan
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Status & Rating (Baris kecil)
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {

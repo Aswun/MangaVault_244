@@ -8,11 +8,15 @@ import com.example.mangavault.ui.viewmodel.library.LibraryViewModel
 import com.example.mangavault.ui.viewmodel.search.SearchViewModel
 import com.example.mangavault.ui.viewmodel.settings.SettingsViewModel
 
+/**
+ * Factory untuk membuat instance ViewModel dengan dependensi yang diperlukan.
+ * Menggunakan AppContainer untuk menyuplai repository atau preferences.
+ */
 class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.Factory {
+
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
-            // PERBAIKAN: Gunakan container.sessionPreferences, bukan authRepository
             modelClass.isAssignableFrom(MainViewModel::class.java) -> {
                 MainViewModel(container.sessionPreferences) as T
             }

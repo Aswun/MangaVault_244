@@ -24,6 +24,13 @@ import com.example.mangavault.ui.view.components.LoadingIndicator
 import com.example.mangavault.ui.viewmodel.search.SearchState
 import com.example.mangavault.ui.viewmodel.search.SearchViewModel
 
+/**
+ * Layar Pencarian Manga.
+ * Memungkinkan pengguna mencari manga via Jikan API dan menyimpannya ke koleksi lokal.
+ *
+ * @param viewModel ViewModel yang menangani logika pencarian dan penyimpanan data.
+ * @param navController Controller navigasi untuk berpindah ke halaman detail.
+ */
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel,
@@ -31,9 +38,9 @@ fun SearchScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var query by remember { mutableStateOf("") }
-    val context = LocalContext.current // Diperlukan untuk cek internet dan Toast
+    val context = LocalContext.current
 
-    // State untuk Dialog Penambahan Manga
+    // State untuk mengontrol visibilitas dialog "Add to Library"
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedMangaToAdd by remember { mutableStateOf<JikanMangaDto?>(null) }
 
@@ -43,14 +50,13 @@ fun SearchScreen(
             .padding(16.dp)
     ) {
 
-        /* SEARCH BAR */
+        // Input Pencarian
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
             label = { Text("Search Manga") },
             trailingIcon = {
                 IconButton(onClick = {
-                    // REVISI: Pass context ke fungsi search
                     viewModel.search(query, context)
                 }) {
                     Icon(Icons.Default.Search, contentDescription = "Search")
@@ -62,7 +68,7 @@ fun SearchScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        /* CONTENT BASED ON STATE */
+        // Konten Hasil Pencarian berdasarkan State (Idle, Loading, Error, Success)
         Box(modifier = Modifier.fillMaxSize()) {
             when (val currentState = state) {
                 is SearchState.Idle -> {
@@ -92,7 +98,7 @@ fun SearchScreen(
                                     navController?.navigate(NavRoute.DetailApi.createRoute(manga.malId))
                                 },
                                 onSave = {
-                                    // REVISI: Jangan langsung save. Buka dialog dulu.
+                                    // Buka dialog untuk input metadata sebelum menyimpan
                                     selectedMangaToAdd = manga
                                     showAddDialog = true
                                 }
@@ -104,17 +110,17 @@ fun SearchScreen(
         }
     }
 
-    // LOGIKA DIALOG (REQ-SEA-07)
+    // Menangani tampilan Dialog Penambahan Manga
     if (showAddDialog && selectedMangaToAdd != null) {
         val manga = selectedMangaToAdd!!
 
-        // Buat objek sementara MangaEntity untuk mengisi nilai default di Dialog
+        // Membuat entitas sementara dengan nilai default untuk ditampilkan di form dialog
         val tempEntity = MangaEntity(
             mangaId = manga.malId,
-            userId = 0, // Dummy
+            userId = 0, // Placeholder, akan diatur otomatis oleh repository/database
             title = manga.title,
             imageUrl = manga.images?.jpg?.imageUrl,
-            status = "Plan to Read", // Default sesuai SRS
+            status = "Plan to Read",
             volumeOwned = 0,
             rating = null
         )
@@ -123,14 +129,13 @@ fun SearchScreen(
             manga = tempEntity,
             onDismiss = { showAddDialog = false },
             onSave = { status, rating, volume ->
-                // Panggil ViewModel dengan data yang sudah diinput user
+                // Simpan manga ke database dengan metadata yang diinput user
                 viewModel.saveToLibrary(
                     manga = manga,
                     status = status,
                     rating = rating,
                     volumeOwned = volume
                 )
-                // REVISI: Tambahkan feedback Toast (Memperbaiki Bug No. 3)
                 Toast.makeText(context, "${manga.title} added to Library", Toast.LENGTH_SHORT).show()
                 showAddDialog = false
             }
@@ -138,6 +143,13 @@ fun SearchScreen(
     }
 }
 
+/**
+ * Komponen UI untuk menampilkan satu item hasil pencarian dalam daftar.
+ *
+ * @param manga Data manga dari API.
+ * @param onClick Aksi saat item diklik (buka detail).
+ * @param onSave Aksi saat tombol Save diklik.
+ */
 @Composable
 private fun SearchItem(
     manga: JikanMangaDto,
