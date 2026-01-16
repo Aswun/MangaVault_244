@@ -47,7 +47,7 @@ fun AboutScreen() {
         )
 
         Text(
-            text = "Aswin Lutfian",
+            text = "Aswin Lutfian Prasetyo",
             style = MaterialTheme.typography.bodyMedium
         )
 
@@ -73,7 +73,7 @@ fun AboutScreen() {
             modifier = Modifier
                 .clickable {
                     // Ganti URL dengan repository sebenarnya jika ada
-                    uriHandler.openUri("https://github.com/aswinlutfian/MangaVault")
+                    uriHandler.openUri("https://github.com/Aswun/MangaVault_244")
                 }
                 .padding(vertical = 4.dp)
         )

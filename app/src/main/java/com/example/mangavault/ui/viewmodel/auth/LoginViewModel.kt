@@ -37,4 +37,9 @@ class LoginViewModel(
                 }
         }
     }
+
+    // PERBAIKAN: Fungsi untuk mereset state saat user logout atau kembali ke login screen
+    fun resetState() {
+        _uiState.value = LoginUiState.Idle
+    }
 }

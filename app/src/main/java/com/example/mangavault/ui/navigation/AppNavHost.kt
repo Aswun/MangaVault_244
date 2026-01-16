@@ -68,17 +68,24 @@ fun AppNavHost(
         }
 
         composable(NavRoute.Setting.route) {
-            // PERBAIKAN: Menambahkan parameter navController yang wajib
             SettingsScreen(
                 viewModel = settingsViewModel,
-                navController = navController,
                 onNavigateToAbout = {
                     navController.navigate(NavRoute.About.route)
                 },
                 onLogoutSuccess = {
+                    // PERBAIKAN: Reset state LoginViewModel agar tidak auto-login
+                    loginViewModel.resetState()
+
                     navController.navigate(NavRoute.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onLoginClick = {
+                    // PERBAIKAN: Reset state juga saat tombol login manual ditekan
+                    loginViewModel.resetState()
+
+                    navController.navigate(NavRoute.Login.route)
                 }
             )
         }

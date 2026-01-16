@@ -13,14 +13,14 @@ class SettingsViewModel(
 ) : ViewModel() {
 
     // Status Dark Mode
-    val isDarkMode: StateFlow<Boolean> = sessionPreferences.isDarkMode
+    val isDarkMode = sessionPreferences.isDarkMode
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = false
         )
 
-    // Status Login (Ditambahkan untuk kebutuhan UI Settings)
+    // PERBAIKAN: Menambahkan status isLoggedIn agar UI bisa berubah dinamis
     val isLoggedIn: StateFlow<Boolean> = sessionPreferences.isLoggedIn
         .stateIn(
             scope = viewModelScope,
@@ -28,16 +28,16 @@ class SettingsViewModel(
             initialValue = false
         )
 
-    fun toggleDarkMode(enabled: Boolean) {
+    fun updateTheme(isDark: Boolean) {
         viewModelScope.launch {
-            sessionPreferences.saveTheme(enabled)
+            sessionPreferences.saveTheme(isDark)
         }
     }
 
-    fun logout() {
+    fun logout(onLogoutSuccess: () -> Unit) {
         viewModelScope.launch {
             sessionPreferences.clearSession()
-            // Navigasi akan ditangani oleh MainViewModel yang mengamati session
+            onLogoutSuccess()
         }
     }
 }
