@@ -1,9 +1,16 @@
 package com.example.mangavault.ui.view.auth
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.mangavault.ui.viewmodel.auth.LoginUiState
 import com.example.mangavault.ui.viewmodel.auth.LoginViewModel
@@ -17,6 +24,9 @@ fun LoginScreen(
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    // State untuk mengatur visibilitas password (Hidden/Visible)
+    var passwordVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
@@ -38,32 +48,64 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Input Username
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
             label = { Text("Username") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        // Input Password dengan Toggle Visibility
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            // Mengubah tampilan teks menjadi titik-titik jika passwordVisible false
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            // Mengatur keyboard agar sesuai untuk input password
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            // Menambahkan ikon mata di sebelah kanan
+            trailingIcon = {
+                val image = if (passwordVisible)
+                    Icons.Filled.Visibility
+                else
+                    Icons.Filled.VisibilityOff
+
+                val description = if (passwordVisible) "Hide password" else "Show password"
+
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = description)
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Tombol Login
         Button(
             onClick = { viewModel.login(username, password) },
             modifier = Modifier.fillMaxWidth(),
             enabled = uiState !is LoginUiState.Loading
         ) {
-            Text("Login")
+            if (uiState is LoginUiState.Loading) {
+                // Tampilkan loading kecil di dalam tombol jika sedang proses
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("Login")
+            }
         }
 
+        // Pesan Error jika Login Gagal
         if (uiState is LoginUiState.Error) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
