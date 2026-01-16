@@ -10,23 +10,31 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.mangavault.data.local.entity.MangaEntity
 import com.example.mangavault.data.remote.dto.JikanMangaDto
-import com.example.mangavault.ui.view.components.LoadingIndicator
 import com.example.mangavault.ui.navigation.NavRoute
+import com.example.mangavault.ui.view.components.EditMangaDialog
+import com.example.mangavault.ui.view.components.LoadingIndicator
 import com.example.mangavault.ui.viewmodel.search.SearchState
 import com.example.mangavault.ui.viewmodel.search.SearchViewModel
 
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel,
-    navController: NavController? = null // Tambahkan NavController untuk navigasi ke detail
+    navController: NavController? = null
 ) {
     val state by viewModel.state.collectAsState()
     var query by remember { mutableStateOf("") }
+    val context = LocalContext.current // Diperlukan untuk cek internet
+
+    // State untuk Dialog Penambahan Manga
+    var showAddDialog by remember { mutableStateOf(false) }
+    var selectedMangaToAdd by remember { mutableStateOf<JikanMangaDto?>(null) }
 
     Column(
         modifier = Modifier
@@ -40,7 +48,10 @@ fun SearchScreen(
             onValueChange = { query = it },
             label = { Text("Search Manga") },
             trailingIcon = {
-                IconButton(onClick = { viewModel.search(query) }) {
+                IconButton(onClick = {
+                    // REVISI: Pass context ke fungsi search
+                    viewModel.search(query, context)
+                }) {
                     Icon(Icons.Default.Search, contentDescription = "Search")
                 }
             },
@@ -77,16 +88,50 @@ fun SearchScreen(
                             SearchItem(
                                 manga = manga,
                                 onClick = {
-                                    // Navigasi ke Detail Screen (menggunakan route yang kita buat sebelumnya)
                                     navController?.navigate(NavRoute.DetailApi.createRoute(manga.malId))
                                 },
-                                onSave = { viewModel.saveToLibrary(manga) }
+                                onSave = {
+                                    // REVISI: Jangan langsung save. Buka dialog dulu.
+                                    selectedMangaToAdd = manga
+                                    showAddDialog = true
+                                }
                             )
                         }
                     }
                 }
             }
         }
+    }
+
+    // LOGIKA DIALOG (REQ-SEA-07)
+    if (showAddDialog && selectedMangaToAdd != null) {
+        val manga = selectedMangaToAdd!!
+
+        // Buat objek sementara MangaEntity untuk mengisi nilai default di Dialog
+        val tempEntity = MangaEntity(
+            mangaId = manga.malId,
+            userId = 0, // Dummy
+            title = manga.title,
+            imageUrl = manga.images?.jpg?.imageUrl,
+            status = "Plan to Read", // Default sesuai SRS
+            volumeOwned = 0,
+            rating = null
+        )
+
+        EditMangaDialog(
+            manga = tempEntity,
+            onDismiss = { showAddDialog = false },
+            onSave = { status, rating, volume ->
+                // Panggil ViewModel dengan data yang sudah diinput user
+                viewModel.saveToLibrary(
+                    manga = manga,
+                    status = status,
+                    rating = rating,
+                    volumeOwned = volume
+                )
+                showAddDialog = false
+            }
+        )
     }
 }
 
@@ -129,7 +174,6 @@ private fun SearchItem(
                 )
             }
 
-            // Tombol Quick Save (Opsional)
             Button(
                 onClick = onSave,
                 modifier = Modifier.align(Alignment.CenterVertically)
